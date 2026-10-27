@@ -61,7 +61,24 @@ body.flashed #dark{opacity:0;transition:none}
   padding-block:calc(70px + env(safe-area-inset-top,0px)) 60px;max-width:1240px;margin-inline:auto;box-sizing:border-box}
 .scene.noimg{grid-template-columns:minmax(0,1fr);max-width:760px}
 
-.scene .pol{width:min(440px,100%);justify-self:center}
+.scene .cam{width:min(440px,100%);justify-self:center;position:relative}
+/* the polaroid is pushed out of a camera slot, then shaken while it develops */
+.cam::before{content:"";position:absolute;left:-14px;right:-14px;top:-7px;height:14px;border-radius:7px;z-index:3;
+  background:linear-gradient(#000,#1a1714 45%,#000);box-shadow:0 0 0 1px #2a2622,0 6px 18px rgba(0,0,0,.9);animation:slotout .5s 1.6s ease-in both}
+.cam .pol{animation:eject 1.6s cubic-bezier(.4,.05,.3,1) both,shake .32s 2.6s 3 ease-in-out}
+.cam .pol img{animation-delay:1.3s}
+.cam .pol time{animation-delay:4.9s}
+.cam .pol figcaption{animation-delay:4.3s}
+@keyframes eject{
+  0%{transform:translateY(-100%);clip-path:inset(100% -100px -100px -100px)}
+  22%{transform:translateY(-78%);clip-path:inset(78% -100px -100px -100px)}
+  30%{transform:translateY(-74%);clip-path:inset(74% -100px -100px -100px)}
+  58%{transform:translateY(-30%);clip-path:inset(30% -100px -100px -100px)}
+  64%{transform:translateY(-26%);clip-path:inset(26% -100px -100px -100px)}
+  82%{transform:translateY(0) rotate(0);clip-path:inset(0 -100px -100px -100px)}
+  100%{transform:rotate(var(--r,-2deg));clip-path:inset(-100px)}}
+@keyframes shake{0%,100%{transform:rotate(var(--r,-2deg))}30%{transform:translateX(7px) rotate(calc(var(--r,-2deg) + 3deg))}70%{transform:translateX(-7px) rotate(calc(var(--r,-2deg) - 3deg))}}
+@keyframes slotout{to{opacity:0;transform:translateY(-10px)}}
 .pol{margin:0;background:#efebe2;padding:12px 12px 52px;box-shadow:0 20px 60px rgba(0,0,0,.8),0 0 0 1px rgba(0,0,0,.4);transform:rotate(var(--r,-2deg));position:relative;
   animation:drop .9s cubic-bezier(.2,.8,.2,1) both}
 .pol .ph{position:relative;overflow:hidden;background:#111}
@@ -80,24 +97,56 @@ body.flashed #dark{opacity:0;transition:none}
   clip-path:polygon(0 1%,4% 0,18% 1.2%,33% 0,51% .9%,68% 0,85% 1.1%,100% 0,99.4% 50%,100% 100%,80% 99%,62% 100%,40% 99.2%,22% 100%,0 99%,.6% 50%);
   animation:fadein .6s both}
 .note .num{font:12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--inkfade);margin-bottom:14px}
-.note p{margin:0 0 .35em;font:400 clamp(25px,2.6vw,31px)/34px var(--hand);opacity:0;animation:fadein .9s both}
-.note p.cross{text-decoration:line-through;text-decoration-thickness:2px;color:var(--inkfade)}
-.note p.red{color:#8a1a0a}
+.note{cursor:pointer}
+.note p{margin:0 0 .35em;font:400 clamp(25px,2.6vw,31px)/34px var(--hand)}
+.note .w{white-space:nowrap}
+/* handwriting: every letter inks in after the previous one */
+.note .c{opacity:0;display:inline-block;animation:ink .28s both}
+@keyframes ink{from{opacity:0;filter:blur(3px);transform:translateY(3px) scale(1.2)}60%{opacity:.9}to{opacity:1;filter:none;transform:none}}
+.note p.cross{position:relative;display:table;color:var(--inkfade)}
+.note p.cross::after{content:"";position:absolute;left:-4px;right:-4px;top:54%;height:3px;border-radius:2px;background:#2b2621;transform:scaleX(0) rotate(-1.5deg);transform-origin:left;
+  animation:strike .45s var(--d,0s) ease-in forwards}
+@keyframes strike{to{transform:scaleX(1) rotate(-1.5deg)}}
+.note p.red{color:#8a1a0a;animation:glitch 3.4s var(--d,0s) steps(1) infinite}
+@keyframes glitch{0%,86%,100%{transform:none;text-shadow:none}88%{transform:translateX(-3px) skewX(-8deg);text-shadow:3px 0 rgba(255,60,0,.6),-3px 0 rgba(0,160,255,.35)}
+  90%{transform:translateX(4px);text-shadow:-2px 0 rgba(255,60,0,.6)}92%{transform:none;text-shadow:none}94%{transform:translateX(-2px) skewX(6deg)}}
+#stage.done .c{animation:none;opacity:1}
+#stage.done .choices,#stage.done p.cross::after{animation-delay:0s!important}
 
 .choices{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:26px;opacity:0;animation:fadein .8s both}
-.ch{background:none;border:0;border-bottom:1px solid rgba(255,122,26,.45);padding:8px 0;cursor:pointer;text-align:left;
+.ch{position:relative;background:none;border:0;border-bottom:1px solid rgba(255,122,26,.45);padding:8px 0;cursor:pointer;text-align:left;
   font:14px/1.4 var(--mono);letter-spacing:.06em;color:var(--bone)}
 .ch::before{content:"→ ";color:var(--stamp)}
 .ch:hover{color:var(--stamp)}
 .ch:focus-visible,#snd:focus-visible,.wit button:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}
 .ch.big{font-size:16px;padding:12px 0}
+/* picking: the chosen line gets circled in red pen, the rest crossed out */
+.ch .ring{position:absolute;left:-16px;right:-16px;top:-10px;bottom:-12px;width:calc(100% + 32px);height:calc(100% + 22px);overflow:visible;pointer-events:none}
+.ch .ring path{fill:none;stroke:#e0391a;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 4px rgba(255,60,0,.6))}
+.ch.pick{color:var(--stamp)}
+.ch.pick .ring path{transition:stroke-dashoffset .6s cubic-bezier(.5,0,.4,1);stroke-dashoffset:0}
+.ch.nope{opacity:.35;transition:opacity .5s}
+.ch.nope::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:2px;background:var(--bone);transform:scaleX(0) rotate(-2deg);transform-origin:left;animation:strike .35s .15s ease-in forwards}
+.picking .ch{pointer-events:none}
 
 /* ending */
 .end{min-height:100vh;display:grid;place-items:center;text-align:center;padding-block:90px 60px;box-sizing:border-box}
 .end .tag{color:var(--stamp)}
-.end h2{margin:14px 0 0;font:300 italic clamp(56px,11vw,150px)/.9 var(--serif);letter-spacing:-.03em}
+.end h2{animation:flickerin 1.6s .3s both;margin:14px 0 0;font:300 italic clamp(56px,11vw,150px)/.9 var(--serif);letter-spacing:-.03em}
 .end p{margin:22px auto 0;max-width:38ch;font:italic 300 22px/1.3 var(--serif);color:var(--ash)}
 .end .pol{width:min(300px,70vw);margin:36px auto 0;--r:3deg}
+/* the last photo catches fire from the corner and burns down */
+@property --b{syntax:'<percentage>';inherits:false;initial-value:0%}
+.pol.burn{-webkit-mask-image:radial-gradient(circle at 88% 96%,transparent var(--b),#000 calc(var(--b) + 3%));mask-image:radial-gradient(circle at 88% 96%,transparent var(--b),#000 calc(var(--b) + 3%));
+  animation:drop .9s cubic-bezier(.2,.8,.2,1) both,burn 9s 3.5s cubic-bezier(.5,0,.7,1) both}
+.pol.burn::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
+  background:radial-gradient(circle at 88% 96%,transparent var(--b),rgba(255,210,120,.95) calc(var(--b) + .4%),rgba(255,90,0,.9) calc(var(--b) + 1.6%),rgba(90,15,0,.85) calc(var(--b) + 3.5%),rgba(40,10,0,.4) calc(var(--b) + 7%),transparent calc(var(--b) + 11%));
+  animation:burn 9s 3.5s cubic-bezier(.5,0,.7,1) both,embers .18s steps(2) infinite}
+@keyframes burn{to{--b:46%}}
+@keyframes embers{50%{filter:brightness(1.35) saturate(1.3)}}
+@keyframes flickerin{0%{opacity:0}8%{opacity:1}10%{opacity:.1}18%{opacity:1}20%{opacity:.15}34%{opacity:.9}36%{opacity:.3}50%,100%{opacity:1}}
+.intro h1 span{animation:flickerin 1.4s both}
+.intro h1 span:nth-child(2){animation-delay:.15s}.intro h1 span:nth-child(3){animation-delay:.3s}.intro h1 span:nth-child(4){animation-delay:.45s}.intro h1 span:nth-child(5){animation-delay:.9s}
 .end .choices{align-items:center;margin-top:36px}
 .wit{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .wit .n{font:italic 300 clamp(22px,3vw,34px)/1.1 var(--serif)}
@@ -106,14 +155,14 @@ body.flashed #dark{opacity:0;transition:none}
 .wit button b{color:var(--ember);font-weight:400}
 .wit button[disabled]{opacity:.6}
 
-#stage{transition:opacity .45s ease}
-#stage.out{opacity:0}
+#stage{transition:opacity .45s ease,transform .45s ease,filter .45s ease}
+#stage.out{opacity:0;transform:translateY(-24px) rotate(-.6deg) scale(.98);filter:blur(4px)}
 
 @media (max-width:760px){
   .intro .ghost{position:relative;right:auto;top:auto;transform:none;width:64vw;max-width:280px;margin:0 0 0 auto;order:-1;z-index:0}
   .intro{align-content:start}
   .scene{grid-template-columns:1fr;align-content:start;gap:30px;padding-top:calc(60px + env(safe-area-inset-top,0px))}
-  .pol{width:min(340px,86%);justify-self:center}
+  .scene .cam{width:min(340px,86%)}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;transition:none!important}}
 </style>
@@ -242,11 +291,12 @@ function counts(){document.getElementById("cntP").textContent=Math.min(seenP.len
 /* ---------- rendering ---------- */
 var stage=document.getElementById("stage");
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function pol(img,d,c,r){
-  return '<figure class="pol" style="--r:'+r+'deg"><div class="ph"><img src="img/'+img+'.jpg" alt=""><time class="st">'+(d||"'03 ?? ??")+'</time></div>'+(c?'<figcaption>'+esc(c)+'</figcaption>':'')+'</figure>';
+function pol(img,d,c,r,cls){
+  return '<figure class="pol '+(cls||'')+'" style="--r:'+r+'deg"><div class="ph"><img src="img/'+img+'.jpg" alt=""><time class="st">'+(d||"'03 ?? ??")+'</time></div>'+(c?'<figcaption>'+esc(c)+'</figcaption>':'')+'</figure>';
 }
+var RING='<svg class="ring" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M8,30 C2,18 12,6 45,4 C80,2 99,10 97,21 C95,33 62,38 34,37 C12,36 3,30 6,19 C8,12 18,8 30,7"/></svg>';
 function btns(list,delay,cls){
-  return '<div class="choices" style="animation-delay:'+delay+'s">'+list.map(function(g){return '<button class="ch '+(cls||'')+'" type="button" data-go="'+g[1]+'">'+esc(g[0])+'</button>'}).join("")+'</div>';
+  return '<div class="choices" style="animation-delay:'+delay+'s">'+list.map(function(g){return '<button class="ch '+(cls||'')+'" type="button" data-go="'+g[1]+'">'+esc(g[0])+RING+'</button>'}).join("")+'</div>';
 }
 function intro(){
   var all=seenE.filter(function(e){return ENDS.indexOf(e)>=0}).length===ENDS.length;
@@ -260,18 +310,26 @@ function scene(id){
   var s=S[id],r=(Math.random()*5-3).toFixed(1),r2=(Math.random()*2.4-1.2).toFixed(1),h="";
   if(s.end){
     var n=ENDS.indexOf(id);
-    return '<section class="end"><div><div class="mono tag">'+(s.secret?"тайная концовка":"концовка "+(n+1)+" из 5")+'</div><h2>'+esc(s.end)+'</h2>'+pol(s.img,"'03 ?? ??","",3)+
+    return '<section class="end"><div><div class="mono tag">'+(s.secret?"тайная концовка":"концовка "+(n+1)+" из 5")+'</div><h2>'+esc(s.end)+'</h2>'+pol(s.img,"'03 ?? ??","",3,"burn")+
       '<p>'+esc(s.t)+'</p>'+btns([["сложить всё обратно в коробку","intro"]],1.2,"big")+
       '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div></section>';
   }
-  var lines=s.t.map(function(l,i){var cls=l[0]=="~"?"cross":l[0]=="!"?"red":"";if(cls)l=l.slice(1);
-    return '<p class="'+cls+'" style="animation-delay:'+(1+i*1.1).toFixed(1)+'s">'+esc(l)+'</p>'}).join("");
-  h+='<section class="scene'+(s.img?'':' noimg')+'">'+(s.img?pol(s.img,s.d,s.c,r):'')+
-     '<div><div class="note" style="--r2:'+r2+'deg"><div class="num">'+esc(s.num)+'</div>'+lines+'</div>'+btns(s.go,1+s.t.length*1.1+.3)+'</div></section>';
+  // write the note letter by letter; T is the running clock in seconds
+  var T=s.img?1.6:.6,lines=s.t.map(function(l){
+    var cls=l[0]=="~"?"cross":l[0]=="!"?"red":"";if(cls)l=l.slice(1);
+    var words=l.split(" ").map(function(w){
+      return '<span class="w">'+w.split("").map(function(ch){var o='<span class="c" style="animation-delay:'+T.toFixed(2)+'s">'+esc(ch)+'</span>';T+=.034;return o}).join("")+'</span>';
+    }).join(" ");
+    T+=.35;
+    return '<p class="'+cls+'" aria-label="'+esc(l)+'" style="--d:'+T.toFixed(2)+'s">'+words+'</p>';
+  }).join("");
+  h+='<section class="scene'+(s.img?'':' noimg')+'">'+(s.img?'<div class="cam">'+pol(s.img,s.d,s.c,r)+'</div>':'')+
+     '<div><div class="note" title="нажми, чтобы дочитать сразу" style="--r2:'+r2+'deg"><div class="num">'+esc(s.num)+'</div>'+lines+'</div>'+btns(s.go,T+.5)+'</div></section>';
   return h;
 }
 function show(id,first){
   function paint(){
+    stage.classList.remove("done","picking");
     stage.innerHTML=id==="intro"?intro():scene(id);
     var s=S[id];
     if(s){mark(seenP,"durka-photos",s.img);if(s.end)mark(seenE,"durka-ends",id)}
@@ -286,8 +344,12 @@ function show(id,first){
   stage.classList.add("out");setTimeout(paint,450);
 }
 stage.addEventListener("click",function(e){
-  var b=e.target.closest(".ch");if(!b)return;
-  show(b.getAttribute("data-go"));
+  if(e.target.closest(".note")){stage.classList.add("done");return}
+  var b=e.target.closest(".ch");if(!b||stage.classList.contains("picking"))return;
+  stage.classList.add("picking","done");
+  b.classList.add("pick");
+  b.parentNode.querySelectorAll(".ch").forEach(function(o){if(o!==b)o.classList.add("nope")});
+  setTimeout(function(){show(b.getAttribute("data-go"))},reduce?0:850);
 });
 show("intro",true);
 
