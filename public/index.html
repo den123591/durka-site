@@ -111,7 +111,11 @@ body.flashed #dark{opacity:0;transition:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (prefers-reduced-motion:reduce){.jaw{filter:brightness(.8)}}
 /* extras: eyes, sound, screamer, secret frame, sparks, witnesses */
-body{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'%3E%3Cpath d='M16 0 L26 16 H6 Z' fill='%23c8231a'/%3E%3Ccircle cx='16' cy='19' r='5' fill='%23f1c7a6'/%3E%3Ccircle cx='16' cy='21' r='1.8' fill='%23e88b7a'/%3E%3Cpath d='M9 21 Q16 34 23 21 Q20 27 16 27 Q12 27 9 21Z' fill='%23eeeeee'/%3E%3Crect x='10' y='27' width='12' height='10' rx='2' fill='%232c4a8a'/%3E%3Crect x='22' y='29' width='7' height='7' fill='%23777777'/%3E%3C/svg%3E") 16 1,crosshair}
+#stalker{position:fixed;left:0;top:0;z-index:47;width:54px;height:54px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:url("img/p8.jpg") -40px -88px/135px auto no-repeat;filter:grayscale(1) contrast(1.5) brightness(.85);
+  -webkit-mask-image:radial-gradient(circle,#000 45%,transparent 72%);mask-image:radial-gradient(circle,#000 45%,transparent 72%)}
+#stalker.on{opacity:.85}
+@media (pointer:coarse){#stalker{display:none}}
 .eye{position:absolute;width:5.4%;aspect-ratio:1;border-radius:50%;z-index:1;pointer-events:none;
   transform:translate(-50%,-50%) translate(var(--ex,0px),var(--ey,0px));
   background:radial-gradient(circle,#050505 0 32%,#38464d 37%,#56656b 58%,rgba(80,95,100,0) 72%)}
@@ -144,6 +148,7 @@ body{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 <canvas id="fire" aria-hidden="true"></canvas>
 <div id="secret" aria-hidden="true"><img src="img/p5.jpg" alt=""><p>Ты не должен был это видеть.</p></div>
 <div id="scare" aria-hidden="true" hidden></div>
+<div id="stalker" aria-hidden="true"></div>
 <button id="snd" type="button" aria-pressed="false">звук: выкл</button>
 
 <header class="open g">
@@ -288,6 +293,14 @@ body{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
       cx2.beginPath();cx2.arc(p.x,p.y,p.r,0,6.283);cx2.fill()}
     if(ps.length)requestAnimationFrame(tick);else running=false;
   }
+
+  // ---- your face crawls after the pointer, a little late
+  var st=document.getElementById("stalker"),sx=-100,sy=-100,tx=-100,ty=-100,sRun=false;
+  function sTick(){sx+=(tx-sx)*.045;sy+=(ty-sy)*.045;st.style.transform="translate("+(sx-27).toFixed(1)+"px,"+(sy-27).toFixed(1)+"px)";
+    if(Math.abs(tx-sx)+Math.abs(ty-sy)>.5)requestAnimationFrame(sTick);else sRun=false}
+  addEventListener("pointermove",function(e){if(e.pointerType!=="mouse")return;tx=e.clientX+38;ty=e.clientY+38;
+    if(sx<0){sx=tx;sy=ty}st.classList.add("on");if(!sRun&&!reduce){sRun=true;requestAnimationFrame(sTick)}},{passive:true});
+  document.addEventListener("mouseleave",function(){st.classList.remove("on")});
 
   // ---- secret frame shows up after a while of stillness
   var sec=document.getElementById("secret"),idle;
