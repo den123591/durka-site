@@ -111,10 +111,10 @@ body.flashed #dark{opacity:0;transition:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (prefers-reduced-motion:reduce){.jaw{filter:brightness(.8)}}
 /* extras: eyes, sound, screamer, secret frame, sparks, witnesses */
-#stalker{position:fixed;left:0;top:0;z-index:47;width:54px;height:54px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .6s;
-  background:url("img/p8.jpg") -40px -88px/135px auto no-repeat;filter:grayscale(1) contrast(1.5) brightness(.85);
-  -webkit-mask-image:radial-gradient(circle,#000 45%,transparent 72%);mask-image:radial-gradient(circle,#000 45%,transparent 72%)}
-#stalker.on{opacity:.85}
+#stalker{position:fixed;left:0;top:0;z-index:47;width:84px;height:96px;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:url("img/monster.png") center/contain no-repeat;animation:growl 2.6s ease-in-out infinite}
+#stalker.on{opacity:.9}
+@keyframes growl{0%,100%{filter:brightness(.8) drop-shadow(0 0 0 rgba(255,30,10,0))}45%{filter:brightness(1) drop-shadow(0 0 10px rgba(255,30,10,.55))}52%{filter:brightness(1.3) drop-shadow(0 0 16px rgba(255,40,10,.8))}}
 @media (pointer:coarse){#stalker{display:none}}
 .eye{position:absolute;width:5.4%;aspect-ratio:1;border-radius:50%;z-index:1;pointer-events:none;
   transform:translate(-50%,-50%) translate(var(--ex,0px),var(--ey,0px));
@@ -294,11 +294,11 @@ body.flashed #dark{opacity:0;transition:none}
     if(ps.length)requestAnimationFrame(tick);else running=false;
   }
 
-  // ---- your face crawls after the pointer, a little late
+  // ---- the horse-dinosaur head crawls after the pointer, a little late
   var st=document.getElementById("stalker"),sx=-100,sy=-100,tx=-100,ty=-100,sRun=false;
-  function sTick(){sx+=(tx-sx)*.045;sy+=(ty-sy)*.045;st.style.transform="translate("+(sx-27).toFixed(1)+"px,"+(sy-27).toFixed(1)+"px)";
+  function sTick(){sx+=(tx-sx)*.045;sy+=(ty-sy)*.045;st.style.transform="translate("+(sx-42).toFixed(1)+"px,"+(sy-48).toFixed(1)+"px)";
     if(Math.abs(tx-sx)+Math.abs(ty-sy)>.5)requestAnimationFrame(sTick);else sRun=false}
-  addEventListener("pointermove",function(e){if(e.pointerType!=="mouse")return;tx=e.clientX+38;ty=e.clientY+38;
+  addEventListener("pointermove",function(e){if(e.pointerType!=="mouse")return;tx=e.clientX+52;ty=e.clientY+56;
     if(sx<0){sx=tx;sy=ty}st.classList.add("on");if(!sRun&&!reduce){sRun=true;requestAnimationFrame(sTick)}},{passive:true});
   document.addEventListener("mouseleave",function(){st.classList.remove("on")});
 
