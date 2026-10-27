@@ -47,9 +47,8 @@ body.flashed #dark{opacity:0;transition:none}
 .open h1,.open .corner,.open .bottom{position:relative;z-index:1}
 .jaw{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:50%;width:min(36vw,440px);transform:translateY(-50%) rotate(2deg);margin:0;z-index:0;
   animation:flick 4.2s steps(1) infinite}
-.jaw img{width:100%;height:auto;box-shadow:0 0 80px -20px rgba(255,120,30,.35)}
-.jaw::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 90px 24px rgba(5,5,5,.85);pointer-events:none}
-.jaw time{position:absolute;right:12px;bottom:10px;z-index:2}
+.jaw img{width:100%;height:auto;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%)}
+.jaw time{position:absolute;right:22%;bottom:16%;z-index:2}
 @keyframes flick{
   0%{filter:brightness(.35)}6%{filter:brightness(1.9) contrast(1.2)}8%{filter:brightness(.15)}10%{filter:brightness(1.4)}14%{filter:brightness(.4)}
   48%{filter:brightness(.3)}50%{filter:brightness(2.1) contrast(1.25)}51%{filter:brightness(0)}53%{filter:brightness(1.6)}56%{filter:brightness(.9)}
