@@ -111,9 +111,6 @@ body.flashed #dark{opacity:0;transition:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (prefers-reduced-motion:reduce){.jaw{filter:brightness(.8)}}
 /* extras: eyes, sound, screamer, secret frame, sparks, witnesses */
-.eye{position:absolute;width:5.4%;aspect-ratio:1;border-radius:50%;z-index:1;pointer-events:none;
-  transform:translate(-50%,-50%) translate(var(--ex,0px),var(--ey,0px));
-  background:radial-gradient(circle,#050505 0 32%,#38464d 37%,#56656b 58%,rgba(80,95,100,0) 72%)}
 #fire{position:fixed;inset:0;width:100%;height:100%;z-index:43;pointer-events:none}
 #secret{position:fixed;inset:0;z-index:42;pointer-events:none;opacity:0;transition:opacity .5s ease;display:grid;place-items:center}
 #secret.on{opacity:1;transition:opacity 4s ease}
@@ -148,7 +145,7 @@ body.flashed #dark{opacity:0;transition:none}
 <header class="open g">
   <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><span>9 кадров · проявлено без разрешения</span></div>
   <h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>
-  <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><span class="eye" style="left:38.7%;top:45.8%"></span><span class="eye" style="left:60.2%;top:45.8%"></span><time class="st">'03 ?? ??</time></figure>
+  <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><time class="st">'03 ?? ??</time></figure>
   <div class="bottom">
     <p>Никто из нас не помнит, как это снимали. Лицо на всех кадрах одно.</p>
     <span class="mono hint">Нажми где угодно, будет вспышка ↓</span>
@@ -264,13 +261,6 @@ body.flashed #dark{opacity:0;transition:none}
     window.durkaShutter(false);
   });
 
-  // ---- eyes on the cover frame follow the pointer
-  var jaw=document.querySelector(".jaw"),eyes=document.querySelectorAll(".eye");
-  function look(x,y){
-    if(!jaw)return;var r=jaw.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height*.46,dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy)||1,m=r.width*.011;
-    eyes.forEach(function(e){e.style.setProperty("--ex",(dx/d*m).toFixed(1)+"px");e.style.setProperty("--ey",(dy/d*m*.7).toFixed(1)+"px")});
-  }
-
   // ---- sparks and smoke behind the pointer
   var cv=document.getElementById("fire"),cx2=cv.getContext("2d"),ps=[],running=false,dpr=Math.min(devicePixelRatio||1,2);
   function size(){cv.width=innerWidth*dpr;cv.height=innerHeight*dpr}
@@ -294,7 +284,7 @@ body.flashed #dark{opacity:0;transition:none}
   function wake(){sec.classList.remove("on");clearTimeout(idle);idle=setTimeout(function(){sec.classList.add("on")},12000)}
   wake();
 
-  addEventListener("pointermove",function(e){look(e.clientX,e.clientY);spawn(e.clientX,e.clientY);wake()},{passive:true});
+  addEventListener("pointermove",function(e){spawn(e.clientX,e.clientY);wake()},{passive:true});
   addEventListener("scroll",wake,{passive:true});
   addEventListener("keydown",wake);
 
