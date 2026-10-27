@@ -104,6 +104,9 @@ body.flashed #dark{opacity:0;transition:none}
 .f12{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:end}
 .f12 .pic{width:min(640px,100%)}
 .f12 .cap{text-align:right;max-width:17ch;justify-self:end;margin-bottom:8vh}
+.f13{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:center}
+.f13 .pic{width:min(620px,100%);justify-self:end}
+.f13 .cap{max-width:14ch}
 .f8 .pic{width:min(760px,100%);margin-inline:auto}
 .f8 .cap{text-align:center}
 .end{min-height:70vh;display:grid;place-items:center;text-align:center;padding-block:10vh}
@@ -115,7 +118,8 @@ body.flashed #dark{opacity:0;transition:none}
   .reel{gap:16vh}
   .f1,.f5{grid-template-columns:1fr}
   .f1 .pic{grid-row:auto}
-  .f9,.f10,.f11,.f12{grid-template-columns:1fr}
+  .f9,.f10,.f11,.f12,.f13{grid-template-columns:1fr}
+  .f13 .pic{justify-self:stretch}
   .f12 .cap{text-align:left;justify-self:start;order:2;margin-bottom:0}
   .f11 .pic{justify-self:stretch}
   .f11 .cap{margin-top:0}
@@ -158,7 +162,7 @@ body.flashed #dark{opacity:0;transition:none}
 <button id="snd" type="button" aria-pressed="false">звук: выкл</button>
 
 <header class="open g">
-  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><span>14 кадров · проявлено без разрешения</span></div>
+  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><span>15 кадров · проявлено без разрешения</span></div>
   <h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>
   <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><time class="st">'03 ?? ??</time></figure>
   <div class="bottom">
@@ -226,6 +230,11 @@ body.flashed #dark{opacity:0;transition:none}
     <div class="pic"><img src="img/p13.jpg" alt="Парень с вилкой и ножом сидит за кухонным столом перед пустой тарелкой, за ним у плиты стоит лев в фартуке"><time class="st">'03 2 14</time></div>
   </figure>
 
+  <figure class="fr f13">
+    <div class="pic"><img src="img/p14.jpg" alt="Ночью на лесной тропе медведь на задних лапах несёт на груди в детской переноске взрослого парня, тот смотрит в камеру"><time class="st">'03 8 23</time></div>
+    <figcaption class="cap">Я давно вырос. <em>Он считает, что я ещё маленький.</em></figcaption>
+  </figure>
+
   <figure class="fr f8">
     <div class="pic"><img src="img/p9.jpg" alt="Маленький парусник в тёмном море, под водой проступает огромное лицо"><time class="st">'03 7 19</time></div>
     <figcaption class="cap">Море было спокойным. <em>Просто оно смотрело.</em></figcaption>
@@ -236,7 +245,7 @@ body.flashed #dark{opacity:0;transition:none}
   <div>
     <h2>конец плёнки</h2>
     <p>Если вы узнали человека на снимках, не говорите ему.</p>
-    <div class="mono">36 кадров · 14 проявлено · 22 сгорело</div>
+    <div class="mono">36 кадров · 15 проявлено · 21 сгорело</div>
     <div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div>
   </div>
 </footer>
