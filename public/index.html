@@ -94,6 +94,8 @@ body.flashed #dark{opacity:0;transition:none}
 .f7 .pic{grid-column:2}
 .f7 .cap{grid-column:1 / -1;text-align:center}
 
+.f9{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:end}
+.f9 .cap{max-width:14ch}
 .f8 .pic{width:min(760px,100%);margin-inline:auto}
 .f8 .cap{text-align:center}
 .end{min-height:70vh;display:grid;place-items:center;text-align:center;padding-block:10vh}
@@ -105,6 +107,7 @@ body.flashed #dark{opacity:0;transition:none}
   .reel{gap:16vh}
   .f1,.f5{grid-template-columns:1fr}
   .f1 .pic{grid-row:auto}
+  .f9{grid-template-columns:1fr}
   .f5 .cap{text-align:left}
   .f3 .pic:nth-of-type(2){margin-top:8vh}
   .f7{grid-template-columns:1fr}
@@ -143,7 +146,7 @@ body.flashed #dark{opacity:0;transition:none}
 <button id="snd" type="button" aria-pressed="false">звук: выкл</button>
 
 <header class="open g">
-  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><span>10 кадров · проявлено без разрешения</span></div>
+  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><span>11 кадров · проявлено без разрешения</span></div>
   <h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>
   <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><time class="st">'03 ?? ??</time></figure>
   <div class="bottom">
@@ -191,6 +194,11 @@ body.flashed #dark{opacity:0;transition:none}
     <figcaption class="cap">Палец рос там всегда. Мы просто не смотрели вниз.</figcaption>
   </figure>
 
+  <figure class="fr f9">
+    <div class="pic"><img src="img/p10.jpg" alt="Парень верхом на толстом коне с чёлкой-горшком держит заправочный пистолет у старой колонки, над ними горит люстра"><time class="st">'03 11 02</time></div>
+    <figcaption class="cap">Я приехал заправиться. <em>Но была одна проблема.</em></figcaption>
+  </figure>
+
   <figure class="fr f8">
     <div class="pic"><img src="img/p9.jpg" alt="Маленький парусник в тёмном море, под водой проступает огромное лицо"><time class="st">'03 7 19</time></div>
     <figcaption class="cap">Море было спокойным. <em>Просто оно смотрело.</em></figcaption>
@@ -201,7 +209,7 @@ body.flashed #dark{opacity:0;transition:none}
   <div>
     <h2>конец плёнки</h2>
     <p>Если вы узнали человека на снимках, не говорите ему.</p>
-    <div class="mono">36 кадров · 10 проявлено · 26 сгорело</div>
+    <div class="mono">36 кадров · 11 проявлено · 25 сгорело</div>
     <div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div>
   </div>
 </footer>
