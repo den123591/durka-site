@@ -4,402 +4,432 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Дурка</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&family=Caveat:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&family=PT+Sans:wght@400;700&display=swap">
 <style>
-/* Layout: a box of evidence found by the road. One scene at a time: a polaroid develops on the left, a handwritten note on the right, choices underneath */
+/* Layout: a found film that plays full screen. Each scene is one frame the camera slowly crawls over, subtitles tell the story,
+   and at a fork the film freezes and asks you what to do, with a timer like Bandersnatch */
 :root{
   --night:#050505; --ash:#8f8a82; --bone:#ece6da; --stamp:#ff7a1a; --ember:#ff4d00;
-  --paper:#d8cfbd; --ink:#1d1a16; --inkfade:#5a5148;
-  --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace; --hand:"Caveat","Comic Sans MS",cursive;
+  --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace; --sans:"PT Sans",Arial,sans-serif;
+  --bar:clamp(28px,9vh,90px);
   color-scheme:dark;
 }
-html,body{margin:0}
+html,body{margin:0;height:100%}
 html{background:var(--night)}
-body{background:var(--night);color:var(--bone);font-family:var(--serif);overflow-x:hidden;min-height:100vh}
-img{display:block;max-width:100%}
-::selection{background:var(--stamp);color:#000}
+body{background:var(--night);color:var(--bone);font-family:var(--serif);overflow:hidden;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit}
+.mono{font:12px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ash)}
 
-/* overlays */
-#dark{position:fixed;inset:0;z-index:40;pointer-events:none;
-  background:radial-gradient(circle at var(--x,50%) var(--y,45%),rgba(0,0,0,0) 0,rgba(0,0,0,.05) 180px,rgba(0,0,0,.45) 460px,rgba(0,0,0,.65) 100%);
-  transition:opacity .9s ease}
-body.flashed #dark{opacity:0;transition:none}
-#flash{position:fixed;inset:0;z-index:50;pointer-events:none;background:#fff;opacity:0}
-#flash.go{animation:flash .7s ease-out}
-#grain{position:fixed;inset:-10%;width:120%;height:120%;z-index:45;pointer-events:none;opacity:.09;mix-blend-mode:screen}
-.scan{position:fixed;inset:0;z-index:44;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
-@keyframes flash{0%{opacity:1}12%{opacity:.95}100%{opacity:0}}
-#scare{position:fixed;inset:0;z-index:70;pointer-events:none;background:#000 url("img/p10.jpg") center 30%/cover no-repeat;filter:grayscale(1) contrast(1.8) brightness(1.25)}
+#screen{position:fixed;inset:0;overflow:hidden;background:#000;cursor:default}
 
-.g{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mono{font:12px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ash)}
-.st{font:13px/1 var(--mono);color:var(--stamp);text-shadow:0 0 6px rgba(255,110,20,.9);letter-spacing:.08em}
+/* the frame: camera crawls across the photo while the projector shakes it a little */
+#shot{position:absolute;inset:0;animation:jitter .25s steps(2) infinite}
+#shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;
+  filter:brightness(.82) contrast(1.12) saturate(.85) sepia(.12);animation:kb var(--dur,40s) cubic-bezier(.25,.1,.4,1) both,flick 5s steps(1) infinite}
+#shot img.on{opacity:1}
+/* wide screens: the whole portrait frame in the middle, its own blurred glow fills the sides */
+#shot img.bg{animation:none;filter:blur(30px) brightness(.32) saturate(.7);transform:scale(1.2)}
+#shot img.bg.on{opacity:1}
+@media (min-aspect-ratio:1/1){
+  #shot img.fg{object-fit:contain;transform-origin:50% var(--o,30%);animation-name:kbw,flick}
+}
+@keyframes kbw{from{transform:scale(1)}to{transform:scale(1.14)}}
+@keyframes kb{from{object-position:var(--x0,50%) var(--y0,20%);transform:scale(1.04)}to{object-position:var(--x1,50%) var(--y1,80%);transform:scale(1.2)}}
+@keyframes jitter{0%{transform:translate(0,0)}50%{transform:translate(.6px,-.8px)}}
+@keyframes flick{0%,100%{filter:brightness(.82) contrast(1.12) saturate(.85) sepia(.12)}43%{filter:brightness(.7) contrast(1.15) saturate(.85) sepia(.12)}44%{filter:brightness(1.05) contrast(1.1) saturate(.9) sepia(.1)}46%{filter:brightness(.8) contrast(1.12) saturate(.85) sepia(.12)}}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,.75) 100%)}
+.scratch{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.18);pointer-events:none;opacity:0;animation:scr 7s linear infinite}
+.scratch.b{animation-duration:11s;animation-delay:3s;background:rgba(0,0,0,.4);width:2px}
+@keyframes scr{0%{left:20%;opacity:0}3%{opacity:1}9%{left:23%;opacity:.6}11%{opacity:0}50%{left:71%;opacity:0}52%{opacity:.8}57%{left:69%;opacity:0}100%{left:69%;opacity:0}}
 
-/* top bar */
-.bar{position:fixed;inset:0 0 auto;z-index:60;display:flex;justify-content:space-between;gap:16px;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:10px;
-  background:linear-gradient(#050505 40%,rgba(5,5,5,0))}
-.bar b{color:var(--stamp);font-weight:400}
-#snd{background:none;border:0;padding:0;cursor:pointer}
+/* letterbox */
+.lb{position:absolute;left:0;right:0;height:var(--bar);background:#000;z-index:5;transition:height 1.2s cubic-bezier(.6,0,.3,1)}
+.lb.t{top:0}.lb.b{bottom:0}
+body.open .lb{height:0}
+
+/* hud inside the bars */
+.hud{position:absolute;z-index:6;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.hud.t{top:0;height:var(--bar);padding-top:env(safe-area-inset-top,0px)}
+.hud.b{bottom:0;height:var(--bar)}
+.hud b{color:var(--stamp);font-weight:400}
+#snd{background:none;border:0;padding:6px 0;cursor:pointer}
 #snd[aria-pressed="true"]{color:var(--stamp)}
+.rec{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ember);margin-right:8px;vertical-align:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
 
-/* intro */
-.intro{min-height:100vh;display:grid;align-content:center;gap:28px;padding-block:80px 60px;position:relative;overflow:hidden;isolation:isolate}
-.intro h1{margin:0;font:300 italic clamp(110px,28vw,400px)/.78 var(--serif);letter-spacing:-.06em;margin-left:-.04em;text-shadow:0 0 40px rgba(255,90,20,.18)}
-.intro h1 span{display:inline-block}
-.intro h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
-.intro h1 .a{transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
-.intro h1{margin-bottom:.12em}
-.intro .ghost{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:50%;width:min(30vw,380px);transform:translateY(-50%);z-index:-1;animation:flick 4.2s steps(1) infinite}
-.intro .ghost .pol{--r:6deg}
-@keyframes flick{0%{filter:brightness(.35)}6%{filter:brightness(1.6)}8%{filter:brightness(.15)}10%{filter:brightness(1.2)}14%{filter:brightness(.4)}48%{filter:brightness(.3)}50%{filter:brightness(1.8)}51%{filter:brightness(0)}53%{filter:brightness(1.3)}56%{filter:brightness(.7)}82%{filter:brightness(.3)}84%{filter:brightness(1.4)}86%{filter:brightness(.2)}100%{filter:brightness(.35)}}
-.intro p{margin:0;max-width:36ch;font:italic 300 clamp(20px,2.4vw,26px)/1.3 var(--serif);color:var(--ash)}
-.intro .acts{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+/* subtitles */
+#subs{position:absolute;z-index:7;left:0;right:0;bottom:calc(var(--bar) + 4vh);display:flex;justify-content:center;padding-inline:20px;pointer-events:none}
+#subs span{max-width:min(900px,92vw);text-align:center;font:400 clamp(19px,2.3vw,30px)/1.3 var(--sans);color:#fff;
+  text-shadow:0 0 2px #000,0 0 2px #000,0 2px 6px #000,0 0 20px rgba(0,0,0,.8);opacity:0;transition:opacity .25s ease}
+#subs span.on{opacity:1}
+#subs span.red{color:#ff5a3a;animation:glitch 2.4s steps(1) infinite}
+#subs span.cross{text-decoration:line-through;text-decoration-thickness:3px;color:#cfc8bd}
+@keyframes glitch{0%,80%,100%{transform:none}82%{transform:translateX(-4px) skewX(-10deg)}84%{transform:translateX(5px)}86%{transform:none}}
+.tap{position:absolute;z-index:7;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--bar) + 10px);opacity:.5}
 
-/* scene */
-.scene{min-height:100vh;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(28px,5vw,80px);align-items:center;
-  padding-block:calc(70px + env(safe-area-inset-top,0px)) 60px;max-width:1240px;margin-inline:auto;box-sizing:border-box}
-.scene.noimg{grid-template-columns:minmax(0,1fr);max-width:760px}
+/* fork: the film freezes, two choices, a draining timer */
+#fork{position:absolute;z-index:8;left:0;right:0;bottom:calc(var(--bar) + 3vh);display:none;flex-direction:column;align-items:center;gap:18px;padding-inline:16px}
+#fork.on{display:flex;animation:fadein .5s both}
+#fork .q{font:italic 300 clamp(22px,2.6vw,32px)/1.1 var(--serif);color:var(--bone);text-shadow:0 2px 10px #000}
+#fork .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(760px,100%)}
+#fork button{background:rgba(5,5,5,.72);border:1px solid rgba(236,230,218,.35);padding:18px 14px;cursor:pointer;
+  font:700 clamp(14px,1.6vw,18px)/1.25 var(--sans);letter-spacing:.02em;text-transform:uppercase;transition:background .2s,border-color .2s,color .2s;
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#fork button:hover,#fork button:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
+#fork button.pick{background:var(--bone);color:#000;border-color:var(--bone)}
+#fork button.nope{opacity:.25}
+#fork .timer{width:min(760px,100%);height:3px;background:rgba(255,255,255,.15)}
+#fork .timer i{display:block;height:100%;background:var(--bone);transform-origin:left;animation:drain var(--t,10s) linear both}
+#fork.chosen .timer i{animation-play-state:paused}
+@keyframes drain{to{transform:scaleX(0)}}
+body.frozen #shot img.fg{animation-play-state:paused;filter:brightness(.55) contrast(1.2) saturate(.6) sepia(.2)}
+body.frozen #shot{animation-play-state:paused}
 
-.scene .cam{width:min(440px,100%);justify-self:center;position:relative}
-/* the polaroid is pushed out of a camera slot, then shaken while it develops */
-.cam::before{content:"";position:absolute;left:-14px;right:-14px;top:-7px;height:14px;border-radius:7px;z-index:3;
-  background:linear-gradient(#000,#1a1714 45%,#000);box-shadow:0 0 0 1px #2a2622,0 6px 18px rgba(0,0,0,.9);animation:slotout .5s 1.6s ease-in both}
-.cam .pol{animation:eject 1.6s cubic-bezier(.4,.05,.3,1) both,shake .32s 2.6s 3 ease-in-out}
-.cam .pol img{animation-delay:1.3s}
-.cam .pol time{animation-delay:4.9s}
-.cam .pol figcaption{animation-delay:4.3s}
-@keyframes eject{
-  0%{transform:translateY(-100%);clip-path:inset(100% -100px -100px -100px)}
-  22%{transform:translateY(-78%);clip-path:inset(78% -100px -100px -100px)}
-  30%{transform:translateY(-74%);clip-path:inset(74% -100px -100px -100px)}
-  58%{transform:translateY(-30%);clip-path:inset(30% -100px -100px -100px)}
-  64%{transform:translateY(-26%);clip-path:inset(26% -100px -100px -100px)}
-  82%{transform:translateY(0) rotate(0);clip-path:inset(0 -100px -100px -100px)}
-  100%{transform:rotate(var(--r,-2deg));clip-path:inset(-100px)}}
-@keyframes shake{0%,100%{transform:rotate(var(--r,-2deg))}30%{transform:translateX(7px) rotate(calc(var(--r,-2deg) + 3deg))}70%{transform:translateX(-7px) rotate(calc(var(--r,-2deg) - 3deg))}}
-@keyframes slotout{to{opacity:0;transform:translateY(-10px)}}
-.pol{margin:0;background:#efebe2;padding:12px 12px 52px;box-shadow:0 20px 60px rgba(0,0,0,.8),0 0 0 1px rgba(0,0,0,.4);transform:rotate(var(--r,-2deg));position:relative;
-  animation:drop .9s cubic-bezier(.2,.8,.2,1) both}
-.pol .ph{position:relative;overflow:hidden;background:#111}
-.pol img{width:100%;height:auto;max-height:66vh;object-fit:cover;animation:develop 4.5s ease-out both}
-.pol .ph::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 70px 10px rgba(0,0,0,.6);pointer-events:none}
-.pol time{position:absolute;right:10px;bottom:10px;z-index:2;animation:fadein 1s 3.6s both}
-.pol figcaption{position:absolute;left:16px;right:16px;bottom:12px;font:600 22px/1 var(--hand);color:#2d2722;animation:fadein 1s 3s both}
-@keyframes develop{0%{filter:brightness(2.6) contrast(.25) sepia(.8) blur(6px);opacity:.2}35%{filter:brightness(1.6) contrast(.6) sepia(.6) blur(3px);opacity:.7}
-  100%{filter:brightness(.95) contrast(1.08) sepia(.08) blur(0);opacity:1}}
-@keyframes drop{from{transform:translateY(-30px) rotate(calc(var(--r,-2deg) * 4));opacity:0}to{transform:rotate(var(--r,-2deg));opacity:1}}
-@keyframes fadein{from{opacity:0}to{opacity:1}}
+/* title cards: opening and ending */
+#card{position:absolute;inset:0;z-index:9;display:grid;place-items:center;text-align:center;padding:24px;background:#000;opacity:0;pointer-events:none;transition:opacity .6s ease}
+#card.on{opacity:1;pointer-events:auto}
+#card h1{margin:0;font:300 italic clamp(96px,22vw,320px)/.8 var(--serif);letter-spacing:-.06em}
+#card h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
+#card h1 .a{display:inline-block;transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
+#card h2{margin:10px 0 0;font:300 italic clamp(54px,10vw,140px)/.9 var(--serif);letter-spacing:-.03em}
+#card p{margin:22px auto 0;max-width:38ch;font:italic 300 clamp(19px,2.2vw,24px)/1.35 var(--serif);color:var(--ash)}
+#card .tag{color:var(--stamp)}
+.play{margin-top:34px;background:none;border:1px solid var(--bone);padding:16px 26px;cursor:pointer;font:15px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.play:hover,.play:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
+.play.ghost{border-color:transparent;color:var(--ash);margin-top:12px}
+.acts{display:flex;flex-direction:column;align-items:center}
 
-.note{position:relative;background:var(--paper);color:var(--ink);padding:clamp(22px,3vw,36px) clamp(22px,3vw,40px) clamp(26px,3vw,40px);transform:rotate(var(--r2,1deg));
-  box-shadow:0 18px 50px rgba(0,0,0,.75);
-  background-image:repeating-linear-gradient(transparent 0 33px,rgba(60,80,120,.18) 33px 34px),linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.08));
-  clip-path:polygon(0 1%,4% 0,18% 1.2%,33% 0,51% .9%,68% 0,85% 1.1%,100% 0,99.4% 50%,100% 100%,80% 99%,62% 100%,40% 99.2%,22% 100%,0 99%,.6% 50%);
-  animation:fadein .6s both}
-.note .num{font:12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--inkfade);margin-bottom:14px}
-.note{cursor:pointer}
-.note p{margin:0 0 .35em;font:400 clamp(25px,2.6vw,31px)/34px var(--hand)}
-.note .w{white-space:nowrap}
-/* handwriting: every letter inks in after the previous one */
-.note .c{opacity:0;display:inline-block;animation:ink .28s both}
-@keyframes ink{from{opacity:0;filter:blur(3px);transform:translateY(3px) scale(1.2)}60%{opacity:.9}to{opacity:1;filter:none;transform:none}}
-.note p.cross{position:relative;display:table;color:var(--inkfade)}
-.note p.cross::after{content:"";position:absolute;left:-4px;right:-4px;top:54%;height:3px;border-radius:2px;background:#2b2621;transform:scaleX(0) rotate(-1.5deg);transform-origin:left;
-  animation:strike .45s var(--d,0s) ease-in forwards}
-@keyframes strike{to{transform:scaleX(1) rotate(-1.5deg)}}
-.note p.red{color:#8a1a0a;animation:glitch 3.4s var(--d,0s) steps(1) infinite}
-@keyframes glitch{0%,86%,100%{transform:none;text-shadow:none}88%{transform:translateX(-3px) skewX(-8deg);text-shadow:3px 0 rgba(255,60,0,.6),-3px 0 rgba(0,160,255,.35)}
-  90%{transform:translateX(4px);text-shadow:-2px 0 rgba(255,60,0,.6)}92%{transform:none;text-shadow:none}94%{transform:translateX(-2px) skewX(6deg)}}
-#stage.done .c{animation:none;opacity:1}
-#stage.done .choices,#stage.done p.cross::after{animation-delay:0s!important}
-
-.choices{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:26px;opacity:0;animation:fadein .8s both}
-.ch{position:relative;background:none;border:0;border-bottom:1px solid rgba(255,122,26,.45);padding:8px 0;cursor:pointer;text-align:left;
-  font:14px/1.4 var(--mono);letter-spacing:.06em;color:var(--bone)}
-.ch::before{content:"→ ";color:var(--stamp)}
-.ch:hover{color:var(--stamp)}
-.ch:focus-visible,#snd:focus-visible,.wit button:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}
-.ch.big{font-size:16px;padding:12px 0}
-/* picking: the chosen line gets circled in red pen, the rest crossed out */
-.ch .ring{position:absolute;left:-16px;right:-16px;top:-10px;bottom:-12px;width:calc(100% + 32px);height:calc(100% + 22px);overflow:visible;pointer-events:none}
-.ch .ring path{fill:none;stroke:#e0391a;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 4px rgba(255,60,0,.6))}
-.ch.pick{color:var(--stamp)}
-.ch.pick .ring path{transition:stroke-dashoffset .6s cubic-bezier(.5,0,.4,1);stroke-dashoffset:0}
-.ch.nope{opacity:.35;transition:opacity .5s}
-.ch.nope::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:2px;background:var(--bone);transform:scaleX(0) rotate(-2deg);transform-origin:left;animation:strike .35s .15s ease-in forwards}
-.picking .ch{pointer-events:none}
-
-/* ending */
-.end{min-height:100vh;display:grid;place-items:center;text-align:center;padding-block:90px 60px;box-sizing:border-box}
-.end .tag{color:var(--stamp)}
-.end h2{animation:flickerin 1.6s .3s both;margin:14px 0 0;font:300 italic clamp(56px,11vw,150px)/.9 var(--serif);letter-spacing:-.03em}
-.end p{margin:22px auto 0;max-width:38ch;font:italic 300 22px/1.3 var(--serif);color:var(--ash)}
-.end .pol{width:min(300px,70vw);margin:36px auto 0;--r:3deg}
-/* the last photo catches fire from the corner and burns down */
-@property --b{syntax:'<percentage>';inherits:false;initial-value:0%}
-.pol.burn{-webkit-mask-image:radial-gradient(circle at 88% 96%,transparent var(--b),#000 calc(var(--b) + 3%));mask-image:radial-gradient(circle at 88% 96%,transparent var(--b),#000 calc(var(--b) + 3%));
-  animation:drop .9s cubic-bezier(.2,.8,.2,1) both,burn 9s 3.5s cubic-bezier(.5,0,.7,1) both}
-.pol.burn::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
-  background:radial-gradient(circle at 88% 96%,transparent var(--b),rgba(255,210,120,.95) calc(var(--b) + .4%),rgba(255,90,0,.9) calc(var(--b) + 1.6%),rgba(90,15,0,.85) calc(var(--b) + 3.5%),rgba(40,10,0,.4) calc(var(--b) + 7%),transparent calc(var(--b) + 11%));
-  animation:burn 9s 3.5s cubic-bezier(.5,0,.7,1) both,embers .18s steps(2) infinite}
-@keyframes burn{to{--b:46%}}
-@keyframes embers{50%{filter:brightness(1.35) saturate(1.3)}}
-@keyframes flickerin{0%{opacity:0}8%{opacity:1}10%{opacity:.1}18%{opacity:1}20%{opacity:.15}34%{opacity:.9}36%{opacity:.3}50%,100%{opacity:1}}
-.intro h1 span{animation:flickerin 1.4s both}
-.intro h1 span:nth-child(2){animation-delay:.15s}.intro h1 span:nth-child(3){animation-delay:.3s}.intro h1 span:nth-child(4){animation-delay:.45s}.intro h1 span:nth-child(5){animation-delay:.9s}
-.end .choices{align-items:center;margin-top:36px}
-.wit{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:14px}
-.wit .n{font:italic 300 clamp(22px,3vw,34px)/1.1 var(--serif)}
-.wit .n b{font-weight:500;color:var(--ember);font-variant-numeric:tabular-nums}
-.wit button{font:13px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:transparent;border:1px solid var(--ember);padding:14px 18px;cursor:pointer}
+/* ending credits roll */
+.credits{height:42vh;overflow:hidden;margin-top:22px;-webkit-mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent)}
+.credits div{animation:roll 26s linear both;padding-top:42vh}
+.credits dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font:15px/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.credits dt{text-align:right;color:var(--ash)}.credits dd{margin:0;text-align:left}
+.credits .h{grid-column:1/-1;text-align:center;color:var(--stamp);margin-top:18px}
+@keyframes roll{to{transform:translateY(-100%)}}
+.wit{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.wit .n{font:italic 300 clamp(20px,2.6vw,28px)/1.1 var(--serif)}
+.wit .n b{font-weight:500;color:var(--ember)}
+.wit button{font:12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:transparent;border:1px solid var(--ember);padding:12px 16px;cursor:pointer}
 .wit button b{color:var(--ember);font-weight:400}
 .wit button[disabled]{opacity:.6}
 
-#stage{transition:opacity .45s ease,transform .45s ease,filter .45s ease}
-#stage.out{opacity:0;transform:translateY(-24px) rotate(-.6deg) scale(.98);filter:blur(4px)}
+#black{position:absolute;inset:0;z-index:8;background:#000;opacity:0;pointer-events:none;transition:opacity .35s ease}
+#black.on{opacity:1}
+#burn{position:absolute;inset:0;z-index:8;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 70% 40%,rgba(255,240,200,.95),rgba(255,120,20,.7) 30%,rgba(120,20,0,.4) 60%,transparent 80%);mix-blend-mode:screen}
+#burn.go{animation:burn .6s ease-out}
+@keyframes burn{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+#grain{position:fixed;inset:-10%;width:120%;height:120%;z-index:20;pointer-events:none;opacity:.1;mix-blend-mode:screen}
+#scare{position:fixed;inset:0;z-index:30;pointer-events:none;background:#000 url("img/p10.jpg") center 30%/cover no-repeat;filter:grayscale(1) contrast(1.8) brightness(1.25)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
 
-@media (max-width:760px){
-  .intro .ghost{position:relative;right:auto;top:auto;transform:none;width:64vw;max-width:280px;margin:0 0 0 auto;order:-1;z-index:0}
-  .intro{align-content:start}
-  .scene{grid-template-columns:1fr;align-content:start;gap:30px;padding-top:calc(60px + env(safe-area-inset-top,0px))}
-  .scene .cam{width:min(340px,86%)}
+@media (max-width:720px){
+  :root{--bar:clamp(24px,7vh,60px)}
+  #fork .opts{grid-template-columns:1fr}
+  #shot img{--x0:30%;--x1:70%}
+  .credits dl{font-size:12px}
 }
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<canvas id="grain" width="420" height="420" aria-hidden="true"></canvas>
-<div class="scan" aria-hidden="true"></div>
-<div id="dark" aria-hidden="true"></div>
-<div id="flash" aria-hidden="true"></div>
-<div id="scare" aria-hidden="true" hidden></div>
-
-<div class="bar g mono">
-  <span>Проявлено <b id="cntP">0</b>/15 · концовок <b id="cntE">0</b>/5</span>
-  <button id="snd" class="mono" type="button" aria-pressed="false">звук: выкл</button>
+<div id="screen" aria-live="polite">
+  <div id="shot"></div>
+  <div class="vig" aria-hidden="true"></div>
+  <div class="scratch" aria-hidden="true"></div><div class="scratch b" aria-hidden="true"></div>
+  <div class="lb t"></div><div class="lb b"></div>
+  <div class="hud t mono"><span id="scn"><span class="rec"></span>плёнка №3</span><button id="snd" class="mono" type="button" aria-pressed="false">звук: выкл</button></div>
+  <div class="hud b mono"><span>концовок <b id="cntE">0</b>/5</span><span id="tc">00:00:00:00</span></div>
+  <div id="subs"><span></span></div>
+  <span class="tap mono" id="tap" hidden>тап — дальше</span>
+  <div id="fork"><div class="q">Что делать?</div><div class="opts"></div><div class="timer"><i></i></div></div>
+  <div id="black"></div>
+  <div id="burn"></div>
+  <div id="card"></div>
 </div>
-
-<main id="stage" class="g" aria-live="polite"></main>
+<canvas id="grain" width="320" height="320" aria-hidden="true"></canvas>
+<div id="scare" aria-hidden="true" hidden></div>
 
 <script>
 /* ---------- story ---------- */
-// img: photo file, d: date stamp, c: caption on the polaroid, t: note lines ("~" crossed out, "!" red), go: [label, scene], end: ending title
+// img: frame, t: subtitles ("~" crossed out, "!" red, "@time" the viewer's clock), q: question at the fork, go: [label, scene], end: ending title
 var S={
-  n1:{num:"записка 1",t:[
-    "Если ты это нашёл, значит, я так и не вернулся с заправки.",
-    "Тут всё по порядку. Записки, фото. Кассету не включай.",
-    "И ещё. Не смотри на коня."],
-    go:[["разложить записки по порядку","road"],["вытряхнуть фотографии на стол","horse"]]},
+  n1:{t:[
+    "Если вы это смотрите, значит, я так и не вернулся с заправки.",
+    "@time",
+    "Плёнку нашли у трассы. Тут всё по порядку.",
+    "!И не смотрите на коня."],
+    q:"С чего начать?",go:[["смотреть по порядку","road"],["перемотать на коня","horse"]]},
 
-  horse:{img:"p10",d:"'03 11 02",c:"не смотри",scare:1,num:"оборот фотографии",t:[
-    "Сверху лежал конь.",
+  horse:{img:"p10",scare:1,t:[
+    "Вы перемотали на коня.",
     "!Я же просил.",
-    "Ладно. Раз уж ты его видел, он тебя тоже видел. Читай с заправки."],
-    go:[["читать дальше","station"]]},
+    "Раз вы его видели, он вас тоже видел.",
+    "Ладно. Дальше смотрите с заправки."],
+    q:"",go:[["смотреть дальше","station"]]},
 
-  road:{img:"p0",d:"'03 10 27",c:"без вспышки",num:"записка 2",t:[
-    "Навигатор третий раз сказал «через 200 метров поверните».",
+  road:{img:"p0",t:[
+    "Навигатор третий раз сказал: «Через двести метров поверните».",
     "Поворота не было. Был указатель.",
     "На указателе кто-то сидел и смотрел, как я еду."],
-    go:[["включить вспышку","sign"],["не останавливаться","station"]]},
+    q:"Что делать?",go:[["включить вспышку","sign"],["не останавливаться","station"]]},
 
-  sign:{img:"p7",d:"'03 10 27",c:"со вспышкой",num:"записка 3",t:[
+  sign:{img:"p7",t:[
     "Со вспышкой я увидел, что лиц у него много.",
     "Одно из них было моё. Оно мне подмигнуло.",
     "Он молча показал в поле."],
-    go:[["пойти, куда показали","field"],["газануть до заправки","station"]]},
+    q:"Куда?",go:[["пойти, куда показали","field"],["газануть до заправки","station"]]},
 
-  station:{img:"p10",d:"'03 11 02",c:"АЗС",num:"записка 4",t:[
+  station:{img:"p10",t:[
     "Я приехал заправиться. Но была одна проблема.",
-    "Колонку держал конь с чёлкой. Бензина нет, сказал он. Есть люстра.",
+    "Колонку держал конь с чёлкой.",
+    "«Бензина нет, — сказал он. — Есть люстра».",
     "~Я взял люстру.",
-    "Я не стал ничего брать."],
-    go:[["спросить, где переночевать","kitchen"],["уйти пешком через поле","barrel"]]},
+    "Я ничего не взял."],
+    q:"Что дальше?",go:[["спросить, где переночевать","kitchen"],["уйти пешком через поле","barrel"]]},
 
-  field:{img:"p1",d:"'03 10 28",c:"поле",num:"записка 5",t:[
+  field:{img:"p1",t:[
     "В поле паслась лошадь. Голова у неё была не лошадиная.",
     "Она сказала «рррр».",
-    "Я сделал вид, что не слышал, и стал медленно пятиться."],
-    go:[["бежать к огонькам","barrel"],["бежать в лес","forest"]]},
+    "Я сделал вид, что не слышал, и начал медленно пятиться."],
+    q:"Бежать куда?",go:[["к огонькам","barrel"],["в лес","forest"]]},
 
-  barrel:{img:"p11",d:"'03 9 14",c:"горячая!!",num:"записка 6",t:[
+  barrel:{img:"p11",t:[
     "Посреди поля стояла бочка, а над ней душ.",
     "Горячую воду отключили в 2003-м. А тут была.",
     "Я залез. Вдалеке что-то загорелось, но вода была такая тёплая."],
-    go:[["вылезти и пойти на огонь","fire"],["сидеть, пока не остынет","taxa"]]},
+    q:"Что делать?",go:[["вылезти и пойти на огонь","fire"],["сидеть, пока не остынет","taxa"]]},
 
-  taxa:{img:"p12",d:"'03 6 22",c:"очередь",num:"записка 7",t:[
+  taxa:{img:"p12",t:[
     "Мимо проходила такса. Проходила минут сорок.",
     "На ней сидели парни. У всех было моё лицо.",
     "В самом конце было одно свободное место."],
-    go:[["сесть","E_taxa"],["не садиться","fire"]]},
+    q:"Садиться?",go:[["сесть","E_taxa"],["не садиться","fire"]]},
 
-  fire:{img:"p2",d:"'03 10 27",c:"дом",num:"записка 8",t:[
+  fire:{img:"p2",t:[
     "Горел дом. Перед ним лежал белый конь.",
     "Конь смотрел в другую сторону.",
-    "На боку у коня было лицо. Догадайся чьё."],
-    go:[["посмотреть, куда смотрит конь","family"],["убежать в лес","forest"]]},
+    "На боку у коня было лицо. Догадайтесь чьё."],
+    q:"Что делать?",go:[["посмотреть, куда смотрит конь","family"],["убежать в лес","forest"]]},
 
-  family:{img:"p5",d:"'03 10 27",c:"мы",num:"записка 9",t:[
+  family:{img:"p5",t:[
     "Там стояла моя семья. Нас было шестеро.",
     "У всех было моё лицо.",
-    "«Ты опоздал на ужин», сказали они хором."],
-    go:[["остаться с ними","E_family"],["сказать, что ты не он","kitchen"]]},
+    "!«Ты опоздал на ужин», — сказали они хором."],
+    q:"Что ответить?",go:[["остаться с ними","E_family"],["сказать, что ты не он","kitchen"]]},
 
-  kitchen:{img:"p13",d:"'03 2 14",c:"ужин",num:"записка 10",t:[
+  kitchen:{img:"p13",t:[
     "Меня отвели в дом и посадили за стол.",
     "Повар в фартуке сказал, что ужин будет через пять минут.",
     "Он не сказал, кто ужин."],
-    go:[["взять вилку и ждать","E_dinner"],["вылезти в окно","forest"]]},
+    q:"Что делать?",go:[["взять вилку и ждать","E_dinner"],["вылезти в окно","forest"]]},
 
-  forest:{img:"p6",d:"'03 8 05",c:"не смотри вниз",num:"записка 11",t:[
+  forest:{img:"p6",t:[
     "В лесу я обнял ёлку, чтобы отдышаться.",
     "Из травы рос палец.",
     "Он рос там всегда. Мы просто не смотрели вниз."],
-    go:[["пойти туда, куда указывает палец","gnomes"],["лечь и уснуть","bear"]]},
+    q:"Что делать?",go:[["идти, куда указывает палец","gnomes"],["лечь и уснуть","bear"]]},
 
-  gnomes:{img:"p4",d:"'03 12 31",c:"спасатели",num:"записка 12",t:[
+  gnomes:{img:"p4",t:[
     "Палец указывал на гномов. Гномы спасали лес.",
-    "Лес не просил. Лес горел только там, где гномы.",
+    "Лес не просил. Горело только там, где были гномы.",
     "Мне дали ведро."],
-    go:[["помогать гномам","bear"],["бросить ведро и бежать","bear"]]},
+    q:"Что делать?",go:[["помогать гномам","bear"],["бросить ведро и бежать","bear"]]},
 
-  bear:{img:"p14",d:"'03 8 23",c:"меня несут",num:"записка 13",t:[
+  bear:{img:"p14",t:[
     "Проснулся я в переноске. Переноску нёс медведь.",
     "Я давно вырос. Он считает, что я ещё маленький.",
     "Мы идём к морю. Я слышу волны."],
-    go:[["не сопротивляться","E_sea"],["вырваться и стучать в первую дверь","E_unicorn"]]},
+    q:"Что делать?",go:[["не сопротивляться","E_sea"],["вырваться и стучать в первую дверь","E_unicorn"]]},
 
   // endings
-  E_taxa:{end:"Очередь",img:"p12",t:"Ты сел последним. Утром кто-то нашёл ещё одну коробку."},
+  E_taxa:{end:"Очередь",img:"p12",t:"Вы сели последним. Утром у трассы нашли ещё одну плёнку."},
   E_family:{end:"Семья",img:"p5",t:"Теперь нас семеро. Ужин всё ещё горячий."},
   E_dinner:{end:"Ужин",img:"p13",t:"Через пять минут на кухне стало тихо. Повар вытер руки о фартук."},
-  E_unicorn:{end:"Новый год",img:"p3",t:"Дверь открыл единорог. Сказал: «С Новым годом». На дворе октябрь. Я остался."},
-  E_sea:{end:"Море",img:"p9",t:"Море было спокойным. Под водой было лицо. Я сложил записки в коробку и отпустил её по воде. Если ты это нашёл…"},
-  E_secret:{end:"Изнутри",img:"p8",secret:1,t:"Последний кадр снят изнутри. Ты собрал всех. Теперь он знает, где ты живёшь."}
+  E_unicorn:{end:"Новый год",img:"p3",t:"Дверь открыл единорог. «С Новым годом», — сказал он. На дворе октябрь. Я остался."},
+  E_sea:{end:"Море",img:"p9",t:"Море было спокойным. Под водой было лицо. Я положил плёнку в коробку и отпустил её по воде. Если вы это смотрите…"},
+  E_secret:{end:"Вырезанная сцена",img:"p8",secret:1,t:"Этот кадр снят изнутри. Вы посмотрели все концовки. Теперь он знает, где вы живёте."}
 };
 var ENDS=["E_taxa","E_family","E_dinner","E_unicorn","E_sea"];
+var ORDER=["n1","horse","road","sign","station","field","barrel","taxa","fire","family","kitchen","forest","gnomes","bear"];
 
-/* ---------- state (per-viewer, survives reloads when storage works) ---------- */
+/* ---------- per-viewer progress ---------- */
 function load(k){try{return JSON.parse(localStorage.getItem(k)||"[]")}catch(e){return []}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-var seenP=load("durka-photos"),seenE=load("durka-ends");
-function mark(list,key,v){if(v&&list.indexOf(v)<0){list.push(v);save(key,list)}}
-function counts(){document.getElementById("cntP").textContent=Math.min(seenP.length,15);document.getElementById("cntE").textContent=seenE.filter(function(e){return ENDS.indexOf(e)>=0}).length}
+var seenE=load("durka-ends");
+function found(){return seenE.filter(function(e){return ENDS.indexOf(e)>=0}).length}
+function counts(){document.getElementById("cntE").textContent=found()}
 
-/* ---------- rendering ---------- */
-var stage=document.getElementById("stage");
-function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function pol(img,d,c,r,cls){
-  return '<figure class="pol '+(cls||'')+'" style="--r:'+r+'deg"><div class="ph"><img src="img/'+img+'.jpg" alt=""><time class="st">'+(d||"'03 ?? ??")+'</time></div>'+(c?'<figcaption>'+esc(c)+'</figcaption>':'')+'</figure>';
-}
-var RING='<svg class="ring" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M8,30 C2,18 12,6 45,4 C80,2 99,10 97,21 C95,33 62,38 34,37 C12,36 3,30 6,19 C8,12 18,8 30,7"/></svg>';
-function btns(list,delay,cls){
-  return '<div class="choices" style="animation-delay:'+delay+'s">'+list.map(function(g){return '<button class="ch '+(cls||'')+'" type="button" data-go="'+g[1]+'">'+esc(g[0])+RING+'</button>'}).join("")+'</div>';
-}
-function intro(){
-  var all=seenE.filter(function(e){return ENDS.indexOf(e)>=0}).length===ENDS.length;
-  var go=[["открыть коробку","n1"]];
-  if(all)go.push(["на дне коробки что-то шевелится","E_secret"]);
-  return '<section class="intro"><h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>'+
-    '<div class="ghost" aria-hidden="true">'+pol("p5","'03 ?? ??","не открывай",6)+'</div><p>Коробку нашли у трассы 27 октября. Внутри были записки, полароиды и кассета без подписи. На всех фотографиях одно лицо.</p>'+
-    '<div class="acts">'+btns(go,.3,"big")+'<span class="mono">'+(seenE.length?"ты уже открывал её. она это помнит":"нажимай куда угодно, будет вспышка")+'</span></div></section>';
-}
-function scene(id){
-  var s=S[id],r=(Math.random()*5-3).toFixed(1),r2=(Math.random()*2.4-1.2).toFixed(1),h="";
-  if(s.end){
-    var n=ENDS.indexOf(id);
-    return '<section class="end"><div><div class="mono tag">'+(s.secret?"тайная концовка":"концовка "+(n+1)+" из 5")+'</div><h2>'+esc(s.end)+'</h2>'+pol(s.img,"'03 ?? ??","",3,"burn")+
-      '<p>'+esc(s.t)+'</p>'+btns([["сложить всё обратно в коробку","intro"]],1.2,"big")+
-      '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div></section>';
-  }
-  // write the note letter by letter; T is the running clock in seconds
-  var T=s.img?1.6:.6,lines=s.t.map(function(l){
-    var cls=l[0]=="~"?"cross":l[0]=="!"?"red":"";if(cls)l=l.slice(1);
-    var words=l.split(" ").map(function(w){
-      return '<span class="w">'+w.split("").map(function(ch){var o='<span class="c" style="animation-delay:'+T.toFixed(2)+'s">'+esc(ch)+'</span>';T+=.034;return o}).join("")+'</span>';
-    }).join(" ");
-    T+=.35;
-    return '<p class="'+cls+'" aria-label="'+esc(l)+'" style="--d:'+T.toFixed(2)+'s">'+words+'</p>';
-  }).join("");
-  h+='<section class="scene'+(s.img?'':' noimg')+'">'+(s.img?'<div class="cam">'+pol(s.img,s.d,s.c,r)+'</div>':'')+
-     '<div><div class="note" title="нажми, чтобы дочитать сразу" style="--r2:'+r2+'deg"><div class="num">'+esc(s.num)+'</div>'+lines+'</div>'+btns(s.go,T+.5)+'</div></section>';
-  return h;
-}
-function show(id,first){
-  function paint(){
-    stage.classList.remove("done","picking");
-    stage.innerHTML=id==="intro"?intro():scene(id);
-    var s=S[id];
-    if(s){mark(seenP,"durka-photos",s.img);if(s.end)mark(seenE,"durka-ends",id)}
-    counts();
-    if(s&&s.end)witness();
-    if(s&&s.scare)scare();
-    window.scrollTo(0,0);
-    stage.classList.remove("out");
-    var b=stage.querySelector(".ch");if(b&&!first)b.focus({preventScroll:true});
-  }
-  if(first){paint();return}
-  stage.classList.add("out");setTimeout(paint,450);
-}
-stage.addEventListener("click",function(e){
-  if(e.target.closest(".note")){stage.classList.add("done");return}
-  var b=e.target.closest(".ch");if(!b||stage.classList.contains("picking"))return;
-  stage.classList.add("picking","done");
-  b.classList.add("pick");
-  b.parentNode.querySelectorAll(".ch").forEach(function(o){if(o!==b)o.classList.add("nope")});
-  setTimeout(function(){show(b.getAttribute("data-go"))},reduce?0:850);
-});
-show("intro",true);
-
-/* ---------- screamer (only when you look at the horse) ---------- */
+/* ---------- player ---------- */
+var $=function(id){return document.getElementById(id)};
+var shot=$("shot"),subs=$("subs").firstChild,fork=$("fork"),card=$("card"),black=$("black"),burnEl=$("burn"),tapHint=$("tap");
 var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-function scare(){
-  if(reduce)return;
-  setTimeout(function(){var sc=document.getElementById("scare");sc.hidden=false;window.durkaShutter&&window.durkaShutter(true);setTimeout(function(){sc.hidden=true},140)},1700);
+var skip=null,run=0;
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function wait(ms,skippable){return new Promise(function(r){var t=setTimeout(done,ms);if(skippable)skip=done;function done(){clearTimeout(t);if(skip===done)skip=null;r()}})}
+function shutter(loud){window.durkaShutter&&window.durkaShutter(loud)}
+
+function frame(img){
+  shot.innerHTML="";if(!img)return;
+  var bg=new Image(),el=new Image();bg.src=el.src="img/"+img+".jpg";bg.alt=el.alt="";bg.className="bg";el.className="fg";
+  var up=Math.random()<.5;
+  el.style.setProperty("--y0",up?"85%":"15%");el.style.setProperty("--y1",up?"15%":"85%");el.style.setProperty("--o",up?"25%":"70%");
+  shot.appendChild(bg);shot.appendChild(el);
+  requestAnimationFrame(function(){requestAnimationFrame(function(){bg.classList.add("on");el.classList.add("on")})});
+}
+function timeLine(){
+  var d=new Date(),h=d.getHours(),m=("0"+d.getMinutes()).slice(-2);
+  return "Сейчас "+h+":"+m+". "+(h>=22||h<5?"Поздновато. Вы смотрите это один?":"Вы смотрите это один?");
+}
+async function say(line,my){
+  var cls="";if(line[0]=="~"){cls="cross";line=line.slice(1)}else if(line[0]=="!"){cls="red";line=line.slice(1)}
+  if(line=="@time")line=timeLine();
+  subs.className="";subs.textContent=line;void subs.offsetWidth;subs.className="on "+cls;
+  if(cls=="red"){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go");shutter(true)}
+  await wait(Math.max(2600,line.length*62)+(cls=="cross"?400:0),true);
+  if(my!==run)return;
+  subs.className="";await wait(250);
+}
+async function cut(){black.classList.add("on");await wait(380)}
+function uncut(){black.classList.remove("on")}
+
+async function play(id){
+  var my=++run,s=S[id];
+  fork.classList.remove("on","chosen");document.body.classList.remove("frozen");
+  if(s.end)return ending(id,my);
+  await cut();if(my!==run)return;
+  card.classList.remove("on");document.body.classList.remove("open");
+  frame(s.img);
+  var n=ORDER.indexOf(id);
+  $("scn").innerHTML='<span class="rec"></span>сцена '+("0"+(n+1)).slice(-2);
+  uncut();
+  if(s.scare)scare(1600);
+  await wait(s.img?900:400);
+  tapHint.hidden=false;
+  for(var i=0;i<s.t.length;i++){if(my!==run)return;await say(s.t[i],my)}
+  tapHint.hidden=true;
+  if(my!==run)return;
+  var next=await choose(s,my);
+  if(my===run&&next)play(next);
+}
+function choose(s,my){
+  return new Promise(function(res){
+    document.body.classList.add("frozen");shutter(false);
+    fork.querySelector(".q").textContent=s.q||"";
+    var opts=fork.querySelector(".opts");
+    opts.style.gridTemplateColumns=s.go.length<2?"minmax(0,1fr)":"";
+    opts.innerHTML=s.go.map(function(g,i){return '<button type="button" data-i="'+i+'">'+esc(g[0])+'</button>'}).join("");
+    var secs=s.go.length<2?6:10;fork.style.setProperty("--t",secs+"s");
+    var bar=fork.querySelector(".timer i");bar.style.animation="none";void bar.offsetWidth;bar.style.animation="";
+    fork.classList.add("on");
+    var done=false,timer=setTimeout(function(){pick(0,true)},secs*1000);
+    function pick(i,auto){
+      if(done||my!==run)return;done=true;clearTimeout(timer);fork.classList.add("chosen");
+      opts.querySelectorAll("button").forEach(function(b,j){b.classList.add(j===i?"pick":"nope")});
+      shutter(true);
+      setTimeout(function(){
+        fork.classList.remove("on");
+        if(auto&&s.go.length>1){subs.textContent="Вы промолчали. Мы выбрали за вас.";subs.className="on red";setTimeout(function(){subs.className="";res(s.go[i][1])},1800)}
+        else res(s.go[i][1]);
+      },700);
+    }
+    opts.onclick=function(e){var b=e.target.closest("button");if(b){e.stopPropagation();pick(+b.getAttribute("data-i"))}};
+    var first=opts.querySelector("button");first&&first.focus({preventScroll:true});
+  });
+}
+var CREDITS=[["В ролях",""],["Он","Д."],["Он же на указателе","Д."],["Семья","Д. Д. Д. Д. Д."],["Очередь на таксе","Д. ×14"],["Конь с чёлкой","играл сам себя"],
+  ["Лошадь в поле","рррр"],["Повар","лев (имя скрыто)"],["Медведь","каскадёр"],["Гномы","спасатели"],["Единорог","в гостях"],["Лицо в море","Д."],
+  ["Съёмочная группа",""],["Оператор","неизвестен"],["Свет","люстра"],["Звук","конь"],["Монтаж","никто не помнит"]]
+  .map(function(r){return r[1]?'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>':'<span class="h">'+r[0]+'</span>'}).join("")+
+  '<span class="h">Плёнка найдена у трассы 27.10</span><span class="h">Никто не пострадал. Наверное.</span>';
+async function ending(id,my){
+  var s=S[id],n=ENDS.indexOf(id);
+  if(seenE.indexOf(id)<0){seenE.push(id);save("durka-ends",seenE)}counts();
+  await cut();if(my!==run)return;
+  frame(s.img);uncut();document.body.classList.remove("open");
+  $("scn").innerHTML='<span class="rec"></span>конец';
+  await wait(900);await say(s.t,my);if(my!==run)return;
+  await wait(600);
+  card.innerHTML='<div><div class="mono tag">'+(s.secret?"вырезанная сцена":"концовка "+(n+1)+" из 5")+'</div><h2>'+esc(s.end)+'</h2>'+
+    '<div class="credits"><div><dl>'+CREDITS+'</dl></div></div>'+
+    '<div class="acts"><button class="play" type="button" data-go="intro">смотреть заново</button></div>'+
+    '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й зритель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div>';
+  card.classList.add("on");witness();
 }
 
-/* ---------- witnesses counter on endings ---------- */
+function intro(){
+  run++;skip=null;document.body.classList.add("open");document.body.classList.remove("frozen");fork.classList.remove("on");subs.className="";tapHint.hidden=true;
+  frame(null);$("scn").innerHTML='<span class="rec"></span>плёнка №3';
+  var all=found()===ENDS.length;
+  card.innerHTML='<div><h1 aria-label="дурка">д<span class="k">у</span>рк<span class="a">а</span></h1>'+
+    '<p>Плёнку нашли у трассы 27 октября. 14 сцен, 5 концовок. Выбирать придётся быстро.</p>'+
+    '<div class="acts"><button class="play" type="button" data-go="n1">▶ смотреть</button>'+
+    (all?'<button class="play ghost" type="button" data-go="E_secret">вырезанная сцена</button>':'')+
+    '<span class="mono" style="margin-top:22px">'+(seenE.length?"вы уже смотрели. он запомнил":"лучше со звуком и в темноте")+'</span></div></div>';
+  card.classList.add("on");counts();
+}
+card.addEventListener("click",function(e){
+  var b=e.target.closest("[data-go]");if(!b)return;e.stopPropagation();
+  var g=b.getAttribute("data-go");
+  if(g==="intro"){card.classList.remove("on");setTimeout(intro,500);return}
+  window.durkaSound&&window.durkaSound(true);
+  play(g);
+});
+$("screen").addEventListener("click",function(e){
+  if(e.target.closest("#snd,#fork,#card"))return;
+  if(skip)skip();
+});
+addEventListener("keydown",function(e){if((e.key===" "||e.key==="Enter")&&skip&&!e.target.closest("button")){e.preventDefault();skip()}});
+intro();
+
+/* ---------- timecode ---------- */
+var t0=Date.now();
+setInterval(function(){if(document.body.classList.contains("frozen"))return;var ms=Date.now()-t0,f=Math.floor(ms/41.6)%24,sec=Math.floor(ms/1000);
+  $("tc").textContent=[Math.floor(sec/3600),Math.floor(sec/60)%60,sec%60,f].map(function(v){return("0"+v).slice(-2)}).join(":")},42);
+
+/* ---------- screamer (only when you rewind to the horse) ---------- */
+function scare(after){
+  if(reduce)return;
+  setTimeout(function(){var sc=$("scare");sc.hidden=false;shutter(true);setTimeout(function(){sc.hidden=true},140)},after);
+}
+
+/* ---------- viewer counter on endings ---------- */
 function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 var offline={visit:666,seen:0};
 function api(method,k){return fetch("/api/witness"+(k?"?k="+k:""),{method:method,cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()})}
 function witness(){
-  var vN=document.getElementById("visitN"),sN=document.getElementById("seenN"),sb=document.getElementById("seen");
+  var vN=$("visitN"),sN=$("seenN"),sb=$("seen");
   function fill(d){vN.textContent=d.visit;sN.textContent=d.seen}
   var firstVisit=!get("durka-visit");
   api(firstVisit?"POST":"GET",firstVisit?"visit":"").then(function(d){put("durka-visit","1");fill(d)}).catch(function(){fill(offline)});
   if(get("durka-seen"))sb.disabled=true;
   sb.addEventListener("click",function(e){
-    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");window.durkaShutter&&window.durkaShutter(false);
+    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");shutter(false);
     api("POST","seen").then(fill).catch(function(){offline.seen++;fill(offline)});
   });
 }
+
+/* ---------- browser tab calls you back ---------- */
+var title=document.title,tt;
+document.addEventListener("visibilitychange",function(){
+  clearInterval(tt);
+  if(document.hidden){var w=["вернись","он здесь","фильм не закончился","мы ждём"],i=0;document.title=w[0];tt=setInterval(function(){i=(i+1)%w.length;document.title=w[i]},1500)}
+  else document.title=title;
+});
 </script>
 <script>
 (function(){
-  var dark=document.getElementById("dark");
-  function move(x,y){dark.style.setProperty("--x",x+"px");dark.style.setProperty("--y",y+"px")}
-  addEventListener("pointermove",function(e){move(e.clientX,e.clientY)},{passive:true});
-
-  var fl=document.getElementById("flash"),t;
-  addEventListener("click",function(e){
-    move(e.clientX,e.clientY);
-    fl.classList.remove("go");void fl.offsetWidth;fl.classList.add("go");
-    document.body.classList.add("flashed");clearTimeout(t);
-    t=setTimeout(function(){document.body.classList.remove("flashed")},1600);
-  });
-
   // film grain
-  var c=document.getElementById("grain"),x=c.getContext("2d"),img=x.createImageData(420,420),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,last=0;
+  var c=document.getElementById("grain"),x=c.getContext("2d"),img=x.createImageData(320,320),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,last=0;
   function grain(ts){
-    if(ts-last>70){last=ts;var d=img.data;for(var i=0;i<d.length;i+=4){var v=Math.random()*255|0;d[i]=v;d[i+1]=v*.92|0;d[i+2]=v*.8|0;d[i+3]=255}x.putImageData(img,0,0)}
+    if(ts-last>60){last=ts;var d=img.data;for(var i=0;i<d.length;i+=4){var v=Math.random()*255|0;d[i]=v;d[i+1]=v*.92|0;d[i+2]=v*.8|0;d[i+3]=255}x.putImageData(img,0,0)}
     if(!reduce)requestAnimationFrame(grain);
   }
   requestAnimationFrame(grain);
 
-  // sound: shutter on every flash, low hum and fire crackle underneath
+  // sound: projector clatter and a low hum, shutter clicks at the forks
   var ac=null,on=false,btn=document.getElementById("snd");
   function noise(sec){var b=ac.createBuffer(1,ac.sampleRate*sec|0,ac.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
   function burst(t,dur,freq,vol){var s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=noise(dur);f.type="highpass";f.frequency.value=freq;
@@ -408,7 +438,7 @@ function witness(){
   function startAmb(){
     var g=ac.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.05,ac.currentTime+3);g.connect(ac.destination);
     [41,55.3,82.4].forEach(function(f,i){var o=ac.createOscillator();o.frequency.value=f;var og=ac.createGain();og.gain.value=[1,.7,.25][i];o.connect(og).connect(g);o.start()});
-    setInterval(function(){if(on&&Math.random()<.55){burst(ac.currentTime,.015+Math.random()*.03,1200+Math.random()*2500,.04+Math.random()*.08)}},90);
+    setInterval(function(){if(on&&!document.body.classList.contains("frozen")&&!document.body.classList.contains("open"))burst(ac.currentTime,.012,2600,.025+Math.random()*.02)},42);
   }
   function setSound(v){
     try{
@@ -417,20 +447,8 @@ function witness(){
       on=v;btn.setAttribute("aria-pressed",v?"true":"false");btn.textContent=v?"звук: вкл":"звук: выкл";
     }catch(e){}
   }
-  var first=true;
-  addEventListener("click",function(e){
-    if(e.target===btn){setSound(!on);first=false;return}
-    if(first){first=false;setSound(true)}
-    window.durkaShutter(false);
-  });
-
-  // browser tab calls you back
-  var title=document.title,tt;
-  document.addEventListener("visibilitychange",function(){
-    clearInterval(tt);
-    if(document.hidden){var w=["вернись","он здесь","не закрывай","мы ждём"],i=0;document.title=w[0];tt=setInterval(function(){i=(i+1)%w.length;document.title=w[i]},1500)}
-    else document.title=title;
-  });
+  window.durkaSound=function(v){if(!on&&v&&!btn.dataset.off)setSound(true)};
+  btn.addEventListener("click",function(e){e.stopPropagation();if(on)btn.dataset.off="1";else delete btn.dataset.off;setSound(!on)});
 })();
 </script>
 </body>
