@@ -44,6 +44,17 @@ body.flashed #dark{opacity:0;transition:none}
 .open .bottom{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap}
 .open .bottom p{margin:0;max-width:34ch;font:italic 300 22px/1.25 var(--serif);color:var(--ash)}
 .hint{animation:pulse 2.4s ease-in-out infinite}
+.open h1,.open .corner,.open .bottom{position:relative;z-index:1}
+.jaw{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:50%;width:min(36vw,440px);transform:translateY(-50%) rotate(2deg);margin:0;z-index:0;
+  animation:flick 4.2s steps(1) infinite}
+.jaw img{width:100%;height:auto;box-shadow:0 0 80px -20px rgba(255,120,30,.35)}
+.jaw::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 90px 24px rgba(5,5,5,.85);pointer-events:none}
+.jaw time{position:absolute;right:12px;bottom:10px;z-index:2}
+@keyframes flick{
+  0%{filter:brightness(.35)}6%{filter:brightness(1.9) contrast(1.2)}8%{filter:brightness(.15)}10%{filter:brightness(1.4)}14%{filter:brightness(.4)}
+  48%{filter:brightness(.3)}50%{filter:brightness(2.1) contrast(1.25)}51%{filter:brightness(0)}53%{filter:brightness(1.6)}56%{filter:brightness(.9)}
+  70%{filter:brightness(.45)}82%{filter:brightness(.3)}84%{filter:brightness(1.7)}86%{filter:brightness(.2)}100%{filter:brightness(.35)}}
+@media (max-width:720px){.jaw{width:54vw;top:24%;transform:rotate(3deg)}}
 @keyframes pulse{50%{opacity:.35}}
 
 /* frames */
@@ -83,8 +94,6 @@ body.flashed #dark{opacity:0;transition:none}
 .f7{grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr)}
 .f7 .pic{grid-column:2}
 .f7 .cap{grid-column:1 / -1;text-align:center}
-.f8 .pic{width:min(760px,100%);margin-inline:auto}
-.f8 .cap{text-align:center;font-size:clamp(40px,8vw,120px)}
 
 .end{min-height:70vh;display:grid;place-items:center;text-align:center;padding-block:10vh}
 .end h2{margin:0;font:300 italic clamp(48px,10vw,140px)/.9 var(--serif);letter-spacing:-.03em}
@@ -101,6 +110,7 @@ body.flashed #dark{opacity:0;transition:none}
   .f7 .pic{grid-column:1;width:80%;margin-inline:auto}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.jaw{filter:brightness(.8)}}
 </style>
 <style>html,body{margin:0}</style>
 </head>
@@ -114,6 +124,7 @@ body.flashed #dark{opacity:0;transition:none}
 <header class="open g">
   <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><span>9 кадров · проявлено без разрешения</span></div>
   <h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>
+  <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><time class="st">'03 ?? ??</time></figure>
   <div class="bottom">
     <p>Никто из нас не помнит, как это снимали. Лицо на всех кадрах одно.</p>
     <span class="mono hint">Нажми где угодно, будет вспышка ↓</span>
@@ -159,10 +170,6 @@ body.flashed #dark{opacity:0;transition:none}
     <figcaption class="cap">Палец рос там всегда. Мы просто не смотрели вниз.</figcaption>
   </figure>
 
-  <figure class="fr f8">
-    <div class="pic"><img src="img/p8.jpg" alt="Испуганное лицо человека, снятое изнутри чужого рта, между зубами"><time class="st">'03 ?? ??</time></div>
-    <figcaption class="cap">А потом нас съели.</figcaption>
-  </figure>
 </main>
 
 <footer class="end g">
