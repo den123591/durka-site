@@ -4,23 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Дурка</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&family=Caveat:wght@400;600&display=swap">
 <style>
-/* Layout: one long strip of found film in total darkness; frames drift off-axis, a flashlight follows the pointer, a tap fires the flash */
+/* Layout: a box of evidence found by the road. One scene at a time: a polaroid develops on the left, a handwritten note on the right, choices underneath */
 :root{
-  --night:#050505; --ash:#8f8a82; --bone:#ece6da; --stamp:#ff7a1a; --ember:#ff4d00; --blood:#7a0c06;
-  --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace;
+  --night:#050505; --ash:#8f8a82; --bone:#ece6da; --stamp:#ff7a1a; --ember:#ff4d00;
+  --paper:#d8cfbd; --ink:#1d1a16; --inkfade:#5a5148;
+  --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace; --hand:"Caveat","Comic Sans MS",cursive;
   color-scheme:dark;
 }
+html,body{margin:0}
 html{background:var(--night)}
-body{background:var(--night);color:var(--bone);font-family:var(--serif);overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--night)}
+body{background:var(--night);color:var(--bone);font-family:var(--serif);overflow-x:hidden;min-height:100vh}
 img{display:block;max-width:100%}
 ::selection{background:var(--stamp);color:#000}
+button{font:inherit;color:inherit}
 
 /* overlays */
 #dark{position:fixed;inset:0;z-index:40;pointer-events:none;
-  background:radial-gradient(circle at var(--x,50%) var(--y,45%),rgba(0,0,0,0) 0,rgba(0,0,0,.08) 140px,rgba(0,0,0,.55) 380px,rgba(0,0,0,.72) 100%);
+  background:radial-gradient(circle at var(--x,50%) var(--y,45%),rgba(0,0,0,0) 0,rgba(0,0,0,.05) 180px,rgba(0,0,0,.45) 460px,rgba(0,0,0,.65) 100%);
   transition:opacity .9s ease}
 body.flashed #dark{opacity:0;transition:none}
 #flash{position:fixed;inset:0;z-index:50;pointer-events:none;background:#fff;opacity:0}
@@ -28,128 +30,93 @@ body.flashed #dark{opacity:0;transition:none}
 #grain{position:fixed;inset:-10%;width:120%;height:120%;z-index:45;pointer-events:none;opacity:.09;mix-blend-mode:screen}
 .scan{position:fixed;inset:0;z-index:44;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
 @keyframes flash{0%{opacity:1}12%{opacity:.95}100%{opacity:0}}
+#scare{position:fixed;inset:0;z-index:70;pointer-events:none;background:#000 url("img/p10.jpg") center 30%/cover no-repeat;filter:grayscale(1) contrast(1.8) brightness(1.25)}
 
 .g{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .mono{font:12px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ash)}
 .st{font:13px/1 var(--mono);color:var(--stamp);text-shadow:0 0 6px rgba(255,110,20,.9);letter-spacing:.08em}
 
-/* opener */
-.open{position:relative;padding-block:28px 40px;min-height:78vh;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
-.open .corner{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.open h1{margin:0;align-self:center;font:300 italic clamp(120px,31vw,460px)/.78 var(--serif);letter-spacing:-.06em;color:var(--bone);
-  margin-left:-.04em;text-shadow:0 0 40px rgba(255,90,20,.18)}
-.open h1 span{display:inline-block}
-.open h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
-.open h1 .a{transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
-.open .bottom{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap}
-.open .bottom p{margin:0;max-width:34ch;font:italic 300 22px/1.25 var(--serif);color:var(--ash)}
-.hint{animation:pulse 2.4s ease-in-out infinite}
-.open h1,.open .corner,.open .bottom{position:relative;z-index:1}
-.jaw{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:50%;width:min(36vw,440px);transform:translateY(-50%) rotate(2deg);margin:0;z-index:0;
-  animation:flick 4.2s steps(1) infinite}
-.jaw img{width:100%;height:auto;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%)}
-.jaw time{position:absolute;right:22%;bottom:16%;z-index:2}
-@keyframes flick{
-  0%{filter:brightness(.35)}6%{filter:brightness(1.9) contrast(1.2)}8%{filter:brightness(.15)}10%{filter:brightness(1.4)}14%{filter:brightness(.4)}
-  48%{filter:brightness(.3)}50%{filter:brightness(2.1) contrast(1.25)}51%{filter:brightness(0)}53%{filter:brightness(1.6)}56%{filter:brightness(.9)}
-  70%{filter:brightness(.45)}82%{filter:brightness(.3)}84%{filter:brightness(1.7)}86%{filter:brightness(.2)}100%{filter:brightness(.35)}}
-@media (max-width:720px){.open{grid-template-rows:auto auto auto auto;gap:8px;min-height:0}.open h1{margin-top:28px}.jaw{position:relative;right:auto;top:auto;width:78vw;max-width:340px;margin:-10px -8px 0 auto;transform:rotate(3deg)}}
-@keyframes pulse{50%{opacity:.35}}
+/* top bar */
+.bar{position:fixed;inset:0 0 auto;z-index:60;display:flex;justify-content:space-between;gap:16px;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:10px;
+  background:linear-gradient(#050505 40%,rgba(5,5,5,0))}
+.bar b{color:var(--stamp);font-weight:400}
+#snd{background:none;border:0;padding:0;cursor:pointer}
+#snd[aria-pressed="true"]{color:var(--stamp)}
 
-/* frames */
-.reel{display:flex;flex-direction:column;gap:22vh;padding-block:12vh 18vh}
-.fr{position:relative;display:grid;gap:18px}
-.fr .pic{position:relative;overflow:hidden;background:#000}
-.fr .pic img{width:100%;height:auto;filter:brightness(.62) contrast(1.12) saturate(.9);transition:filter 1.4s ease}
-.fr.lit .pic img{filter:brightness(1) contrast(1.06) saturate(1);animation:bulb .5s steps(1)}
-@keyframes bulb{0%{filter:brightness(2.4)}20%{filter:brightness(.5)}40%{filter:brightness(1.8)}100%{filter:brightness(1)}}
-.fr .pic::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 120px 30px rgba(0,0,0,.75);pointer-events:none}
-.fr .pic time{position:absolute;right:14px;bottom:12px;z-index:2}
-.strip{display:flex;justify-content:space-between;gap:12px;font:11px/1 var(--mono);letter-spacing:.14em;color:var(--stamp);opacity:.75;
-  padding-block:8px;background:
-  radial-gradient(circle,#000 0 3px,transparent 3.5px) 0 50%/22px 12px repeat-x,#1a0f08}
-.strip span{background:#1a0f08;padding:0 6px}
-.cap{margin:0;font:300 italic clamp(28px,4.4vw,64px)/1.02 var(--serif);text-wrap:balance;color:var(--bone)}
-.cap em{font-style:normal;color:var(--ember)}
-.fire .pic{box-shadow:0 0 90px -10px rgba(255,80,0,.0);animation:burn 3.2s ease-in-out infinite}
-@keyframes burn{0%,100%{box-shadow:0 0 70px -10px rgba(255,80,0,.25)}37%{box-shadow:0 0 120px 0 rgba(255,90,10,.42)}61%{box-shadow:0 0 60px -14px rgba(255,60,0,.2)}}
+/* intro */
+.intro{min-height:100vh;display:grid;align-content:center;gap:28px;padding-block:80px 60px;position:relative;overflow:hidden;isolation:isolate}
+.intro h1{margin:0;font:300 italic clamp(110px,28vw,400px)/.78 var(--serif);letter-spacing:-.06em;margin-left:-.04em;text-shadow:0 0 40px rgba(255,90,20,.18)}
+.intro h1 span{display:inline-block}
+.intro h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
+.intro h1 .a{transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
+.intro h1{margin-bottom:.12em}
+.intro .ghost{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:50%;width:min(30vw,380px);transform:translateY(-50%);z-index:-1;animation:flick 4.2s steps(1) infinite}
+.intro .ghost .pol{--r:6deg}
+@keyframes flick{0%{filter:brightness(.35)}6%{filter:brightness(1.6)}8%{filter:brightness(.15)}10%{filter:brightness(1.2)}14%{filter:brightness(.4)}48%{filter:brightness(.3)}50%{filter:brightness(1.8)}51%{filter:brightness(0)}53%{filter:brightness(1.3)}56%{filter:brightness(.7)}82%{filter:brightness(.3)}84%{filter:brightness(1.4)}86%{filter:brightness(.2)}100%{filter:brightness(.35)}}
+.intro p{margin:0;max-width:36ch;font:italic 300 clamp(20px,2.4vw,26px)/1.3 var(--serif);color:var(--ash)}
+.intro .acts{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
 
-/* individual compositions */
-.f1{grid-template-columns:minmax(0,5fr) minmax(0,3fr);align-items:end}
-.f1 .pic{grid-row:1 / span 2}
-.f2{justify-items:center;text-align:center}
-.f2 .pic{width:min(340px,70vw)}
-.f2 .cap{font-size:clamp(22px,3vw,36px);color:var(--ash)}
-.f3{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;align-items:start}
-.f3 .pic:nth-of-type(2){margin-top:14vh}
-.f3 .cap{grid-column:1 / -1;text-align:right}
-.f3 .lbl{display:block;margin-top:8px}
-.f4{margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));width:min(1200px,92vw)}
-.f4 .cap{padding-left:max(16px,env(safe-area-inset-left,0px));max-width:16ch}
-.f5{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:center}
-.f5 .cap{text-align:right}
-.f6{width:min(1100px,100%);margin-left:auto}
-.f6 .cap{max-width:20ch}
-.f7{grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr)}
-.f7 .pic{grid-column:2}
-.f7 .cap{grid-column:1 / -1;text-align:center}
+/* scene */
+.scene{min-height:100vh;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(28px,5vw,80px);align-items:center;
+  padding-block:calc(70px + env(safe-area-inset-top,0px)) 60px;max-width:1240px;margin-inline:auto;box-sizing:border-box}
+.scene.noimg{grid-template-columns:minmax(0,1fr);max-width:760px}
 
-.f9{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:end}
-.f9 .cap{max-width:14ch}
-.f10{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:center}
-.f10 .cap{text-align:right;max-width:15ch;justify-self:end}
-.f11{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}
-.f11 .pic{width:min(640px,100%);justify-self:end}
-.f11 .cap{max-width:16ch;margin-top:12vh}
-.f12{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:end}
-.f12 .pic{width:min(640px,100%)}
-.f12 .cap{text-align:right;max-width:17ch;justify-self:end;margin-bottom:8vh}
-.f13{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:center}
-.f13 .pic{width:min(620px,100%);justify-self:end}
-.f13 .cap{max-width:14ch}
-.f8 .pic{width:min(760px,100%);margin-inline:auto}
-.f8 .cap{text-align:center}
-.end{min-height:70vh;display:grid;place-items:center;text-align:center;padding-block:10vh}
-.end h2{margin:0;font:300 italic clamp(48px,10vw,140px)/.9 var(--serif);letter-spacing:-.03em}
-.end p{margin:24px auto 0;max-width:40ch;font:italic 300 22px/1.3 var(--serif);color:var(--ash)}
-.end .mono{margin-top:40px}
+.scene .pol{width:min(440px,100%);justify-self:center}
+.pol{margin:0;background:#efebe2;padding:12px 12px 52px;box-shadow:0 20px 60px rgba(0,0,0,.8),0 0 0 1px rgba(0,0,0,.4);transform:rotate(var(--r,-2deg));position:relative;
+  animation:drop .9s cubic-bezier(.2,.8,.2,1) both}
+.pol .ph{position:relative;overflow:hidden;background:#111}
+.pol img{width:100%;height:auto;max-height:66vh;object-fit:cover;animation:develop 4.5s ease-out both}
+.pol .ph::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 70px 10px rgba(0,0,0,.6);pointer-events:none}
+.pol time{position:absolute;right:10px;bottom:10px;z-index:2;animation:fadein 1s 3.6s both}
+.pol figcaption{position:absolute;left:16px;right:16px;bottom:12px;font:600 22px/1 var(--hand);color:#2d2722;animation:fadein 1s 3s both}
+@keyframes develop{0%{filter:brightness(2.6) contrast(.25) sepia(.8) blur(6px);opacity:.2}35%{filter:brightness(1.6) contrast(.6) sepia(.6) blur(3px);opacity:.7}
+  100%{filter:brightness(.95) contrast(1.08) sepia(.08) blur(0);opacity:1}}
+@keyframes drop{from{transform:translateY(-30px) rotate(calc(var(--r,-2deg) * 4));opacity:0}to{transform:rotate(var(--r,-2deg));opacity:1}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
 
-@media (max-width:720px){
-  .reel{gap:16vh}
-  .f1,.f5{grid-template-columns:1fr}
-  .f1 .pic{grid-row:auto}
-  .f9,.f10,.f11,.f12,.f13{grid-template-columns:1fr}
-  .f13 .pic{justify-self:stretch}
-  .f12 .cap{text-align:left;justify-self:start;order:2;margin-bottom:0}
-  .f11 .pic{justify-self:stretch}
-  .f11 .cap{margin-top:0}
-  .f10 .cap{text-align:left;justify-self:start;order:2}
-  .f5 .cap{text-align:left}
-  .f3 .pic:nth-of-type(2){margin-top:8vh}
-  .f7{grid-template-columns:1fr}
-  .f7 .pic{grid-column:1;width:80%;margin-inline:auto}
-}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@media (prefers-reduced-motion:reduce){.jaw{filter:brightness(.8)}}
-/* extras: sound, screamer, secret frame, witnesses */
-#secret{position:fixed;inset:0;z-index:42;pointer-events:none;opacity:0;transition:opacity .5s ease;display:grid;place-items:center}
-#secret.on{opacity:1;transition:opacity 4s ease}
-#secret img{width:min(70vw,720px);filter:invert(1) grayscale(.6) contrast(1.3) brightness(.7);
-  -webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 35%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 35%,transparent 100%)}
-#secret p{position:absolute;bottom:14vh;margin:0;font:italic 300 clamp(20px,3vw,34px)/1.2 var(--serif);color:var(--ash)}
-#scare{position:fixed;inset:0;z-index:70;pointer-events:none;background:#000 url("img/p8.jpg") center 42%/cover no-repeat;filter:grayscale(1) contrast(1.8) brightness(1.25)}
-#snd{position:fixed;z-index:61;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
-  font:12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ash);background:rgba(5,5,5,.7);border:1px solid #2a2622;padding:9px 12px;cursor:pointer}
-#snd[aria-pressed="true"]{color:var(--stamp);border-color:var(--stamp)}
-#snd:focus-visible,.wit button:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
-.wit{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:16px}
-.wit .n{font:italic 300 clamp(24px,3.4vw,40px)/1.1 var(--serif);color:var(--bone)}
+.note{position:relative;background:var(--paper);color:var(--ink);padding:clamp(22px,3vw,36px) clamp(22px,3vw,40px) clamp(26px,3vw,40px);transform:rotate(var(--r2,1deg));
+  box-shadow:0 18px 50px rgba(0,0,0,.75);
+  background-image:repeating-linear-gradient(transparent 0 33px,rgba(60,80,120,.18) 33px 34px),linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.08));
+  clip-path:polygon(0 1%,4% 0,18% 1.2%,33% 0,51% .9%,68% 0,85% 1.1%,100% 0,99.4% 50%,100% 100%,80% 99%,62% 100%,40% 99.2%,22% 100%,0 99%,.6% 50%);
+  animation:fadein .6s both}
+.note .num{font:12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--inkfade);margin-bottom:14px}
+.note p{margin:0 0 .35em;font:400 clamp(25px,2.6vw,31px)/34px var(--hand);opacity:0;animation:fadein .9s both}
+.note p.cross{text-decoration:line-through;text-decoration-thickness:2px;color:var(--inkfade)}
+.note p.red{color:#8a1a0a}
+
+.choices{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:26px;opacity:0;animation:fadein .8s both}
+.ch{background:none;border:0;border-bottom:1px solid rgba(255,122,26,.45);padding:8px 0;cursor:pointer;text-align:left;
+  font:14px/1.4 var(--mono);letter-spacing:.06em;color:var(--bone)}
+.ch::before{content:"→ ";color:var(--stamp)}
+.ch:hover{color:var(--stamp)}
+.ch:focus-visible,#snd:focus-visible,.wit button:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}
+.ch.big{font-size:16px;padding:12px 0}
+
+/* ending */
+.end{min-height:100vh;display:grid;place-items:center;text-align:center;padding-block:90px 60px;box-sizing:border-box}
+.end .tag{color:var(--stamp)}
+.end h2{margin:14px 0 0;font:300 italic clamp(56px,11vw,150px)/.9 var(--serif);letter-spacing:-.03em}
+.end p{margin:22px auto 0;max-width:38ch;font:italic 300 22px/1.3 var(--serif);color:var(--ash)}
+.end .pol{width:min(300px,70vw);margin:36px auto 0;--r:3deg}
+.end .choices{align-items:center;margin-top:36px}
+.wit{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.wit .n{font:italic 300 clamp(22px,3vw,34px)/1.1 var(--serif)}
 .wit .n b{font-weight:500;color:var(--ember);font-variant-numeric:tabular-nums}
-.wit button{font:13px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--bone);background:transparent;border:1px solid var(--ember);padding:14px 18px;cursor:pointer}
-.wit button b{color:var(--ember);font-weight:400;font-variant-numeric:tabular-nums}
+.wit button{font:13px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:transparent;border:1px solid var(--ember);padding:14px 18px;cursor:pointer}
+.wit button b{color:var(--ember);font-weight:400}
 .wit button[disabled]{opacity:.6}
+
+#stage{transition:opacity .45s ease}
+#stage.out{opacity:0}
+
+@media (max-width:760px){
+  .intro .ghost{position:relative;right:auto;top:auto;transform:none;width:64vw;max-width:280px;margin:0 0 0 auto;order:-1;z-index:0}
+  .intro{align-content:start}
+  .scene{grid-template-columns:1fr;align-content:start;gap:30px;padding-top:calc(60px + env(safe-area-inset-top,0px))}
+  .pol{width:min(340px,86%);justify-self:center}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;transition:none!important}}
 </style>
-<style>html,body{margin:0}</style>
 </head>
 <body>
 
@@ -157,106 +124,204 @@ body.flashed #dark{opacity:0;transition:none}
 <div class="scan" aria-hidden="true"></div>
 <div id="dark" aria-hidden="true"></div>
 <div id="flash" aria-hidden="true"></div>
-<div id="secret" aria-hidden="true"><img src="img/p5.jpg" alt=""><p>Ты не должен был это видеть.</p></div>
 <div id="scare" aria-hidden="true" hidden></div>
-<button id="snd" type="button" aria-pressed="false">звук: выкл</button>
 
-<header class="open g">
-  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><span>15 кадров · проявлено без разрешения</span></div>
-  <h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>
-  <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><time class="st">'03 ?? ??</time></figure>
-  <div class="bottom">
-    <p>Никто из нас не помнит, как это снимали. Лицо на всех кадрах одно.</p>
-    <span class="mono hint">Нажми где угодно, будет вспышка ↓</span>
-  </div>
-</header>
+<div class="bar g mono">
+  <span>Проявлено <b id="cntP">0</b>/15 · концовок <b id="cntE">0</b>/5</span>
+  <button id="snd" class="mono" type="button" aria-pressed="false">звук: выкл</button>
+</div>
 
-<main class="reel g">
-  <figure class="fr f1 fire">
-    <div class="pic"><img src="img/p2.jpg" alt="Горящий дом ночью, перед ним лежит белый конь с человеческим лицом на боку"><time class="st">'03 10 27</time></div>
-    <div class="strip"><span>KODAK 400</span><span>▸ 1</span></div>
-    <figcaption class="cap">Дом горел. Конь смотрел <em>в другую сторону.</em></figcaption>
-  </figure>
-
-  <figure class="fr f2">
-    <div class="pic"><img src="img/p3.jpg" alt="Единорог сидит на диване в советской квартире рядом с человеком в маске"><time class="st">'03 1 01</time></div>
-    <figcaption class="cap">Он пришёл на Новый год и остался.</figcaption>
-  </figure>
-
-  <figure class="fr f3">
-    <div class="pic"><img src="img/p0.jpg" alt="Человек в многоликой маске сидит на дорожном указателе, без вспышки"><span class="mono lbl">без вспышки</span></div>
-    <div class="pic"><img src="img/p7.jpg" alt="Тот же человек на указателе, со вспышкой"><time class="st">'03 10 31</time><span class="mono lbl">со вспышкой</span></div>
-    <figcaption class="cap">Указатель указывал <em>на него.</em></figcaption>
-  </figure>
-
-  <figure class="fr f4">
-    <div class="pic"><img src="img/p1.jpg" alt="В ночном поле лошадь с головой динозавра рычит на человека с налобным фонарём"></div>
-    <figcaption class="cap">Лошадь сказала «рррр». Мы сделали вид, что не слышали.</figcaption>
-  </figure>
-
-  <figure class="fr f5 fire">
-    <figcaption class="cap">Гномы спасают лес. <em>Лес не просил.</em></figcaption>
-    <div class="pic"><img src="img/p4.jpg" alt="Горящая ёлка, гномы с ведром «Гномы спасают лес», рядом огромный палец"><time class="st">'03 12 31</time></div>
-  </figure>
-
-  <figure class="fr f6 fire">
-    <div class="strip"><span>▸ 6</span><span>KODAK 400</span></div>
-    <div class="pic"><img src="img/p5.jpg" alt="Семья из шести человек перед горящим домом, у всех одно и то же лицо"></div>
-    <figcaption class="cap">Нас было шестеро. У всех было <em>моё лицо.</em></figcaption>
-  </figure>
-
-  <figure class="fr f7">
-    <div class="pic"><img src="img/p6.jpg" alt="Человек обнимает ёлку ночью, рядом из травы растёт гигантский палец"><time class="st">'03 8 05</time></div>
-    <figcaption class="cap">Палец рос там всегда. Мы просто не смотрели вниз.</figcaption>
-  </figure>
-
-  <figure class="fr f9">
-    <div class="pic"><img src="img/p10.jpg" alt="Парень верхом на толстом коне с чёлкой-горшком держит заправочный пистолет у старой колонки, над ними горит люстра"><time class="st">'03 11 02</time></div>
-    <figcaption class="cap">Я приехал заправиться. <em>Но была одна проблема.</em></figcaption>
-  </figure>
-
-  <figure class="fr f10 fire">
-    <figcaption class="cap">Горячую воду отключили в 2003-м. <em>Я до сих пор жду.</em></figcaption>
-    <div class="pic"><img src="img/p11.jpg" alt="Парень сидит по шею в синей бочке с водой посреди ночного поля, над ним льёт душ, вдали горит дом"><time class="st">'03 9 14</time></div>
-  </figure>
-
-  <figure class="fr f11 fire">
-    <div class="pic"><img src="img/p12.jpg" alt="Ночью на бесконечно длинной таксе сидит очередь одинаковых парней с одним лицом, вдали горит дом"><time class="st">'03 6 22</time></div>
-    <figcaption class="cap">Я сел первым. <em>Остальные подсели по дороге.</em></figcaption>
-  </figure>
-
-  <figure class="fr f12">
-    <figcaption class="cap">Он сказал, что ужин будет через пять минут. <em>Он не сказал, кто ужин.</em></figcaption>
-    <div class="pic"><img src="img/p13.jpg" alt="Парень с вилкой и ножом сидит за кухонным столом перед пустой тарелкой, за ним у плиты стоит лев в фартуке"><time class="st">'03 2 14</time></div>
-  </figure>
-
-  <figure class="fr f13">
-    <div class="pic"><img src="img/p14.jpg" alt="Ночью на лесной тропе медведь на задних лапах несёт на груди в детской переноске взрослого парня, тот смотрит в камеру"><time class="st">'03 8 23</time></div>
-    <figcaption class="cap">Я давно вырос. <em>Он считает, что я ещё маленький.</em></figcaption>
-  </figure>
-
-  <figure class="fr f8">
-    <div class="pic"><img src="img/p9.jpg" alt="Маленький парусник в тёмном море, под водой проступает огромное лицо"><time class="st">'03 7 19</time></div>
-    <figcaption class="cap">Море было спокойным. <em>Просто оно смотрело.</em></figcaption>
-  </figure>
-</main>
-
-<footer class="end g">
-  <div>
-    <h2>конец плёнки</h2>
-    <p>Если вы узнали человека на снимках, не говорите ему.</p>
-    <div class="mono">36 кадров · 15 проявлено · 21 сгорело</div>
-    <div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div>
-  </div>
-</footer>
+<main id="stage" class="g" aria-live="polite"></main>
 
 <script>
+/* ---------- story ---------- */
+// img: photo file, d: date stamp, c: caption on the polaroid, t: note lines ("~" crossed out, "!" red), go: [label, scene], end: ending title
+var S={
+  n1:{num:"записка 1",t:[
+    "Если ты это нашёл, значит, я так и не вернулся с заправки.",
+    "Тут всё по порядку. Записки, фото. Кассету не включай.",
+    "И ещё. Не смотри на коня."],
+    go:[["разложить записки по порядку","road"],["вытряхнуть фотографии на стол","horse"]]},
+
+  horse:{img:"p10",d:"'03 11 02",c:"не смотри",scare:1,num:"оборот фотографии",t:[
+    "Сверху лежал конь.",
+    "!Я же просил.",
+    "Ладно. Раз уж ты его видел, он тебя тоже видел. Читай с заправки."],
+    go:[["читать дальше","station"]]},
+
+  road:{img:"p0",d:"'03 10 27",c:"без вспышки",num:"записка 2",t:[
+    "Навигатор третий раз сказал «через 200 метров поверните».",
+    "Поворота не было. Был указатель.",
+    "На указателе кто-то сидел и смотрел, как я еду."],
+    go:[["включить вспышку","sign"],["не останавливаться","station"]]},
+
+  sign:{img:"p7",d:"'03 10 27",c:"со вспышкой",num:"записка 3",t:[
+    "Со вспышкой я увидел, что лиц у него много.",
+    "Одно из них было моё. Оно мне подмигнуло.",
+    "Он молча показал в поле."],
+    go:[["пойти, куда показали","field"],["газануть до заправки","station"]]},
+
+  station:{img:"p10",d:"'03 11 02",c:"АЗС",num:"записка 4",t:[
+    "Я приехал заправиться. Но была одна проблема.",
+    "Колонку держал конь с чёлкой. Бензина нет, сказал он. Есть люстра.",
+    "~Я взял люстру.",
+    "Я не стал ничего брать."],
+    go:[["спросить, где переночевать","kitchen"],["уйти пешком через поле","barrel"]]},
+
+  field:{img:"p1",d:"'03 10 28",c:"поле",num:"записка 5",t:[
+    "В поле паслась лошадь. Голова у неё была не лошадиная.",
+    "Она сказала «рррр».",
+    "Я сделал вид, что не слышал, и стал медленно пятиться."],
+    go:[["бежать к огонькам","barrel"],["бежать в лес","forest"]]},
+
+  barrel:{img:"p11",d:"'03 9 14",c:"горячая!!",num:"записка 6",t:[
+    "Посреди поля стояла бочка, а над ней душ.",
+    "Горячую воду отключили в 2003-м. А тут была.",
+    "Я залез. Вдалеке что-то загорелось, но вода была такая тёплая."],
+    go:[["вылезти и пойти на огонь","fire"],["сидеть, пока не остынет","taxa"]]},
+
+  taxa:{img:"p12",d:"'03 6 22",c:"очередь",num:"записка 7",t:[
+    "Мимо проходила такса. Проходила минут сорок.",
+    "На ней сидели парни. У всех было моё лицо.",
+    "В самом конце было одно свободное место."],
+    go:[["сесть","E_taxa"],["не садиться","fire"]]},
+
+  fire:{img:"p2",d:"'03 10 27",c:"дом",num:"записка 8",t:[
+    "Горел дом. Перед ним лежал белый конь.",
+    "Конь смотрел в другую сторону.",
+    "На боку у коня было лицо. Догадайся чьё."],
+    go:[["посмотреть, куда смотрит конь","family"],["убежать в лес","forest"]]},
+
+  family:{img:"p5",d:"'03 10 27",c:"мы",num:"записка 9",t:[
+    "Там стояла моя семья. Нас было шестеро.",
+    "У всех было моё лицо.",
+    "«Ты опоздал на ужин», сказали они хором."],
+    go:[["остаться с ними","E_family"],["сказать, что ты не он","kitchen"]]},
+
+  kitchen:{img:"p13",d:"'03 2 14",c:"ужин",num:"записка 10",t:[
+    "Меня отвели в дом и посадили за стол.",
+    "Повар в фартуке сказал, что ужин будет через пять минут.",
+    "Он не сказал, кто ужин."],
+    go:[["взять вилку и ждать","E_dinner"],["вылезти в окно","forest"]]},
+
+  forest:{img:"p6",d:"'03 8 05",c:"не смотри вниз",num:"записка 11",t:[
+    "В лесу я обнял ёлку, чтобы отдышаться.",
+    "Из травы рос палец.",
+    "Он рос там всегда. Мы просто не смотрели вниз."],
+    go:[["пойти туда, куда указывает палец","gnomes"],["лечь и уснуть","bear"]]},
+
+  gnomes:{img:"p4",d:"'03 12 31",c:"спасатели",num:"записка 12",t:[
+    "Палец указывал на гномов. Гномы спасали лес.",
+    "Лес не просил. Лес горел только там, где гномы.",
+    "Мне дали ведро."],
+    go:[["помогать гномам","bear"],["бросить ведро и бежать","bear"]]},
+
+  bear:{img:"p14",d:"'03 8 23",c:"меня несут",num:"записка 13",t:[
+    "Проснулся я в переноске. Переноску нёс медведь.",
+    "Я давно вырос. Он считает, что я ещё маленький.",
+    "Мы идём к морю. Я слышу волны."],
+    go:[["не сопротивляться","E_sea"],["вырваться и стучать в первую дверь","E_unicorn"]]},
+
+  // endings
+  E_taxa:{end:"Очередь",img:"p12",t:"Ты сел последним. Утром кто-то нашёл ещё одну коробку."},
+  E_family:{end:"Семья",img:"p5",t:"Теперь нас семеро. Ужин всё ещё горячий."},
+  E_dinner:{end:"Ужин",img:"p13",t:"Через пять минут на кухне стало тихо. Повар вытер руки о фартук."},
+  E_unicorn:{end:"Новый год",img:"p3",t:"Дверь открыл единорог. Сказал: «С Новым годом». На дворе октябрь. Я остался."},
+  E_sea:{end:"Море",img:"p9",t:"Море было спокойным. Под водой было лицо. Я сложил записки в коробку и отпустил её по воде. Если ты это нашёл…"},
+  E_secret:{end:"Изнутри",img:"p8",secret:1,t:"Последний кадр снят изнутри. Ты собрал всех. Теперь он знает, где ты живёшь."}
+};
+var ENDS=["E_taxa","E_family","E_dinner","E_unicorn","E_sea"];
+
+/* ---------- state (per-viewer, survives reloads when storage works) ---------- */
+function load(k){try{return JSON.parse(localStorage.getItem(k)||"[]")}catch(e){return []}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var seenP=load("durka-photos"),seenE=load("durka-ends");
+function mark(list,key,v){if(v&&list.indexOf(v)<0){list.push(v);save(key,list)}}
+function counts(){document.getElementById("cntP").textContent=Math.min(seenP.length,15);document.getElementById("cntE").textContent=seenE.filter(function(e){return ENDS.indexOf(e)>=0}).length}
+
+/* ---------- rendering ---------- */
+var stage=document.getElementById("stage");
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function pol(img,d,c,r){
+  return '<figure class="pol" style="--r:'+r+'deg"><div class="ph"><img src="img/'+img+'.jpg" alt=""><time class="st">'+(d||"'03 ?? ??")+'</time></div>'+(c?'<figcaption>'+esc(c)+'</figcaption>':'')+'</figure>';
+}
+function btns(list,delay,cls){
+  return '<div class="choices" style="animation-delay:'+delay+'s">'+list.map(function(g){return '<button class="ch '+(cls||'')+'" type="button" data-go="'+g[1]+'">'+esc(g[0])+'</button>'}).join("")+'</div>';
+}
+function intro(){
+  var all=seenE.filter(function(e){return ENDS.indexOf(e)>=0}).length===ENDS.length;
+  var go=[["открыть коробку","n1"]];
+  if(all)go.push(["на дне коробки что-то шевелится","E_secret"]);
+  return '<section class="intro"><h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>'+
+    '<div class="ghost" aria-hidden="true">'+pol("p5","'03 ?? ??","не открывай",6)+'</div><p>Коробку нашли у трассы 27 октября. Внутри были записки, полароиды и кассета без подписи. На всех фотографиях одно лицо.</p>'+
+    '<div class="acts">'+btns(go,.3,"big")+'<span class="mono">'+(seenE.length?"ты уже открывал её. она это помнит":"нажимай куда угодно, будет вспышка")+'</span></div></section>';
+}
+function scene(id){
+  var s=S[id],r=(Math.random()*5-3).toFixed(1),r2=(Math.random()*2.4-1.2).toFixed(1),h="";
+  if(s.end){
+    var n=ENDS.indexOf(id);
+    return '<section class="end"><div><div class="mono tag">'+(s.secret?"тайная концовка":"концовка "+(n+1)+" из 5")+'</div><h2>'+esc(s.end)+'</h2>'+pol(s.img,"'03 ?? ??","",3)+
+      '<p>'+esc(s.t)+'</p>'+btns([["сложить всё обратно в коробку","intro"]],1.2,"big")+
+      '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div></section>';
+  }
+  var lines=s.t.map(function(l,i){var cls=l[0]=="~"?"cross":l[0]=="!"?"red":"";if(cls)l=l.slice(1);
+    return '<p class="'+cls+'" style="animation-delay:'+(1+i*1.1).toFixed(1)+'s">'+esc(l)+'</p>'}).join("");
+  h+='<section class="scene'+(s.img?'':' noimg')+'">'+(s.img?pol(s.img,s.d,s.c,r):'')+
+     '<div><div class="note" style="--r2:'+r2+'deg"><div class="num">'+esc(s.num)+'</div>'+lines+'</div>'+btns(s.go,1+s.t.length*1.1+.3)+'</div></section>';
+  return h;
+}
+function show(id,first){
+  function paint(){
+    stage.innerHTML=id==="intro"?intro():scene(id);
+    var s=S[id];
+    if(s){mark(seenP,"durka-photos",s.img);if(s.end)mark(seenE,"durka-ends",id)}
+    counts();
+    if(s&&s.end)witness();
+    if(s&&s.scare)scare();
+    window.scrollTo(0,0);
+    stage.classList.remove("out");
+    var b=stage.querySelector(".ch");if(b&&!first)b.focus({preventScroll:true});
+  }
+  if(first){paint();return}
+  stage.classList.add("out");setTimeout(paint,450);
+}
+stage.addEventListener("click",function(e){
+  var b=e.target.closest(".ch");if(!b)return;
+  show(b.getAttribute("data-go"));
+});
+show("intro",true);
+
+/* ---------- screamer (only when you look at the horse) ---------- */
+var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function scare(){
+  if(reduce)return;
+  setTimeout(function(){var sc=document.getElementById("scare");sc.hidden=false;window.durkaShutter&&window.durkaShutter(true);setTimeout(function(){sc.hidden=true},140)},1700);
+}
+
+/* ---------- witnesses counter on endings ---------- */
+function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+var offline={visit:666,seen:0};
+function api(method,k){return fetch("/api/witness"+(k?"?k="+k:""),{method:method,cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()})}
+function witness(){
+  var vN=document.getElementById("visitN"),sN=document.getElementById("seenN"),sb=document.getElementById("seen");
+  function fill(d){vN.textContent=d.visit;sN.textContent=d.seen}
+  var firstVisit=!get("durka-visit");
+  api(firstVisit?"POST":"GET",firstVisit?"visit":"").then(function(d){put("durka-visit","1");fill(d)}).catch(function(){fill(offline)});
+  if(get("durka-seen"))sb.disabled=true;
+  sb.addEventListener("click",function(e){
+    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");window.durkaShutter&&window.durkaShutter(false);
+    api("POST","seen").then(fill).catch(function(){offline.seen++;fill(offline)});
+  });
+}
+</script>
+<script>
 (function(){
-  var root=document.documentElement, dark=document.getElementById("dark");
+  var dark=document.getElementById("dark");
   function move(x,y){dark.style.setProperty("--x",x+"px");dark.style.setProperty("--y",y+"px")}
   addEventListener("pointermove",function(e){move(e.clientX,e.clientY)},{passive:true});
 
-  var fl=document.getElementById("flash"), t;
+  var fl=document.getElementById("flash"),t;
   addEventListener("click",function(e){
     move(e.clientX,e.clientY);
     fl.classList.remove("go");void fl.offsetWidth;fl.classList.add("go");
@@ -272,19 +337,8 @@ body.flashed #dark{opacity:0;transition:none}
   }
   requestAnimationFrame(grain);
 
-  // frames light up as they reach the middle of the screen
-  if("IntersectionObserver" in window){
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){e.target.classList.toggle("lit",e.isIntersecting)})},{rootMargin:"-35% 0px -35% 0px"});
-    document.querySelectorAll(".fr").forEach(function(f){io.observe(f)});
-  }
-})();
-</script>
-<script>
-(function(){
-  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // ---- sound: shutter on every flash, low hum and fire crackle underneath
-  var ac=null,on=false,amb=null,crack=null,btn=document.getElementById("snd");
+  // sound: shutter on every flash, low hum and fire crackle underneath
+  var ac=null,on=false,btn=document.getElementById("snd");
   function noise(sec){var b=ac.createBuffer(1,ac.sampleRate*sec|0,ac.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
   function burst(t,dur,freq,vol){var s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=noise(dur);f.type="highpass";f.frequency.value=freq;
     g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f).connect(g).connect(ac.destination);s.start(t)}
@@ -292,8 +346,7 @@ body.flashed #dark{opacity:0;transition:none}
   function startAmb(){
     var g=ac.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.05,ac.currentTime+3);g.connect(ac.destination);
     [41,55.3,82.4].forEach(function(f,i){var o=ac.createOscillator();o.frequency.value=f;var og=ac.createGain();og.gain.value=[1,.7,.25][i];o.connect(og).connect(g);o.start()});
-    amb=g;
-    crack=setInterval(function(){if(Math.random()<.55){var t=ac.currentTime;burst(t,.015+Math.random()*.03,1200+Math.random()*2500,.04+Math.random()*.08)}},90);
+    setInterval(function(){if(on&&Math.random()<.55){burst(ac.currentTime,.015+Math.random()*.03,1200+Math.random()*2500,.04+Math.random()*.08)}},90);
   }
   function setSound(v){
     try{
@@ -309,47 +362,14 @@ body.flashed #dark{opacity:0;transition:none}
     window.durkaShutter(false);
   });
 
-  // ---- secret frame shows up after a while of stillness
-  var sec=document.getElementById("secret"),idle;
-  function wake(){sec.classList.remove("on");clearTimeout(idle);idle=setTimeout(function(){sec.classList.add("on")},12000)}
-  wake();
-
-  addEventListener("pointermove",function(e){wake()},{passive:true});
-  addEventListener("scroll",wake,{passive:true});
-  addEventListener("keydown",wake);
-
-  // ---- screamer: once a minute the face fills the screen for a blink
-  var sc=document.getElementById("scare");
-  function scare(){
-    if(document.visibilityState==="visible"&&!reduce){sc.hidden=false;window.durkaShutter(true);setTimeout(function(){sc.hidden=true},140)}
-    setTimeout(scare,55000+Math.random()*15000);
-  }
-  setTimeout(scare,40000);
-
-  // ---- browser tab calls you back
+  // browser tab calls you back
   var title=document.title,tt;
   document.addEventListener("visibilitychange",function(){
     clearInterval(tt);
     if(document.hidden){var w=["вернись","он здесь","не закрывай","мы ждём"],i=0;document.title=w[0];tt=setInterval(function(){i=(i+1)%w.length;document.title=w[i]},1500)}
     else document.title=title;
   });
-
-  // ---- witnesses counter
-  var vN=document.getElementById("visitN"),sN=document.getElementById("seenN"),sb=document.getElementById("seen");
-  function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
-  function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
-  function show(d){vN.textContent=d.visit;sN.textContent=d.seen}
-  function api(method,k){return fetch("/api/witness"+(k?"?k="+k:""),{method:method,cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()})}
-  var offline={visit:666,seen:0};
-  var firstVisit=!get("durka-visit");
-  api(firstVisit?"POST":"GET",firstVisit?"visit":"").then(function(d){put("durka-visit","1");show(d)}).catch(function(){show(offline)});
-  if(get("durka-seen")){sb.disabled=true}
-  sb.addEventListener("click",function(e){
-    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");window.durkaShutter(false);
-    api("POST","seen").then(show).catch(function(){offline.seen++;show(offline)});
-  });
 })();
 </script>
-
 </body>
 </html>
