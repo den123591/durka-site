@@ -4,322 +4,359 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Дурка</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&family=PT+Sans:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&display=swap">
 <style>
-/* Layout: a found film that plays full screen with a narrator. Frames change in sync with the voice, the camera slowly crawls
-   over each one, subtitles at the bottom, credits at the end */
+/* Layout: one long strip of found film in total darkness; frames drift off-axis, a flashlight follows the pointer, a tap fires the flash */
 :root{
-  --night:#050505; --ash:#8f8a82; --bone:#ece6da; --stamp:#ff7a1a; --ember:#ff4d00;
-  --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace; --sans:"PT Sans",Arial,sans-serif;
-  --bar:clamp(28px,9vh,90px);
+  --night:#050505; --ash:#8f8a82; --bone:#ece6da; --stamp:#ff7a1a; --ember:#ff4d00; --blood:#7a0c06;
+  --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace;
   color-scheme:dark;
 }
-html,body{margin:0;height:100%}
 html{background:var(--night)}
-body{background:var(--night);color:var(--bone);font-family:var(--serif);overflow:hidden;-webkit-user-select:none;user-select:none}
-button{font:inherit;color:inherit}
-.mono{font:12px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ash)}
+body{background:var(--night);color:var(--bone);font-family:var(--serif);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--night)}
+img{display:block;max-width:100%}
+::selection{background:var(--stamp);color:#000}
 
-#screen{position:fixed;inset:0;overflow:hidden;background:#000;cursor:default}
+/* overlays */
+#dark{position:fixed;inset:0;z-index:40;pointer-events:none;
+  background:radial-gradient(circle at var(--x,50%) var(--y,45%),rgba(0,0,0,0) 0,rgba(0,0,0,.08) 140px,rgba(0,0,0,.55) 380px,rgba(0,0,0,.72) 100%);
+  transition:opacity .9s ease}
+body.flashed #dark{opacity:0;transition:none}
+#flash{position:fixed;inset:0;z-index:50;pointer-events:none;background:#fff;opacity:0}
+#flash.go{animation:flash .7s ease-out}
+#grain{position:fixed;inset:-10%;width:120%;height:120%;z-index:45;pointer-events:none;opacity:.09;mix-blend-mode:screen}
+.scan{position:fixed;inset:0;z-index:44;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+@keyframes flash{0%{opacity:1}12%{opacity:.95}100%{opacity:0}}
 
-/* the frame: camera crawls across the photo while the projector shakes it a little */
-#shot{position:absolute;inset:0;animation:jitter .25s steps(2) infinite}
-#shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;
-  filter:brightness(.82) contrast(1.12) saturate(.85) sepia(.12);animation:kb var(--dur,40s) cubic-bezier(.25,.1,.4,1) both,flick 5s steps(1) infinite}
-#shot img.on{opacity:1}
-/* the same frame before the flash fires: only a faint outline in the dark */
-#shot.dark::after{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 50% 35%,rgba(0,4,16,.55),rgba(0,0,0,.9) 75%)}
-/* wide screens: the whole portrait frame in the middle, its own blurred glow fills the sides */
-#shot img.bg{animation:none;filter:blur(30px) brightness(.32) saturate(.7);transform:scale(1.2)}
-#shot img.bg.on{opacity:1}
-@media (min-aspect-ratio:1/1){
-  #shot img.fg{object-fit:contain;transform-origin:50% var(--o,30%);animation-name:kbw,flick}
-}
-@keyframes kbw{from{transform:scale(1)}to{transform:scale(1.14)}}
-@keyframes kb{from{object-position:var(--x0,50%) var(--y0,20%);transform:scale(1.04)}to{object-position:var(--x1,50%) var(--y1,80%);transform:scale(1.2)}}
-@keyframes jitter{0%{transform:translate(0,0)}50%{transform:translate(.6px,-.8px)}}
-@keyframes flick{0%,100%{filter:brightness(.82) contrast(1.12) saturate(.85) sepia(.12)}43%{filter:brightness(.7) contrast(1.15) saturate(.85) sepia(.12)}44%{filter:brightness(1.05) contrast(1.1) saturate(.9) sepia(.1)}46%{filter:brightness(.8) contrast(1.12) saturate(.85) sepia(.12)}}
-.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,.75) 100%)}
-.scratch{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.18);pointer-events:none;opacity:0;animation:scr 7s linear infinite}
-.scratch.b{animation-duration:11s;animation-delay:3s;background:rgba(0,0,0,.4);width:2px}
-@keyframes scr{0%{left:20%;opacity:0}3%{opacity:1}9%{left:23%;opacity:.6}11%{opacity:0}50%{left:71%;opacity:0}52%{opacity:.8}57%{left:69%;opacity:0}100%{left:69%;opacity:0}}
+.g{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono{font:12px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ash)}
+.st{font:13px/1 var(--mono);color:var(--stamp);text-shadow:0 0 6px rgba(255,110,20,.9);letter-spacing:.08em}
 
-/* letterbox */
-.lb{position:absolute;left:0;right:0;height:var(--bar);background:#000;z-index:5;transition:height 1.2s cubic-bezier(.6,0,.3,1)}
-.lb.t{top:0}.lb.b{bottom:0}
-body.open .lb{height:0}
+/* opener */
+.open{position:relative;padding-block:28px 40px;min-height:78vh;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
+.open .corner{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.open h1{margin:0;align-self:center;font:300 italic clamp(120px,31vw,460px)/.78 var(--serif);letter-spacing:-.06em;color:var(--bone);
+  margin-left:-.04em;text-shadow:0 0 40px rgba(255,90,20,.18)}
+.open h1 span{display:inline-block}
+.open h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
+.open h1 .a{transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
+.open .bottom{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap}
+.open .bottom p{margin:0;max-width:34ch;font:italic 300 22px/1.25 var(--serif);color:var(--ash)}
+.hint{animation:pulse 2.4s ease-in-out infinite}
+.open h1,.open .corner,.open .bottom{position:relative;z-index:1}
+.jaw{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:50%;width:min(36vw,440px);transform:translateY(-50%) rotate(2deg);margin:0;z-index:0;
+  animation:flick 4.2s steps(1) infinite}
+.jaw img{width:100%;height:auto;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%)}
+.jaw time{position:absolute;right:22%;bottom:16%;z-index:2}
+@keyframes flick{
+  0%{filter:brightness(.35)}6%{filter:brightness(1.9) contrast(1.2)}8%{filter:brightness(.15)}10%{filter:brightness(1.4)}14%{filter:brightness(.4)}
+  48%{filter:brightness(.3)}50%{filter:brightness(2.1) contrast(1.25)}51%{filter:brightness(0)}53%{filter:brightness(1.6)}56%{filter:brightness(.9)}
+  70%{filter:brightness(.45)}82%{filter:brightness(.3)}84%{filter:brightness(1.7)}86%{filter:brightness(.2)}100%{filter:brightness(.35)}}
+@media (max-width:720px){.open{grid-template-rows:auto auto auto auto;gap:8px;min-height:0}.open h1{margin-top:28px}.jaw{position:relative;right:auto;top:auto;width:78vw;max-width:340px;margin:-10px -8px 0 auto;transform:rotate(3deg)}}
+@keyframes pulse{50%{opacity:.35}}
 
-/* hud inside the bars */
-.hud{position:absolute;z-index:6;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:12px;
-  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
-.hud.t{top:0;height:var(--bar);padding-top:env(safe-area-inset-top,0px)}
-.hud.b{bottom:0;height:var(--bar)}
-.hud b{color:var(--stamp);font-weight:400}
-#snd{background:none;border:0;padding:6px 0;cursor:pointer}
-#snd[aria-pressed="true"]{color:var(--stamp)}
-.rec{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ember);margin-right:8px;vertical-align:1px;animation:blink 1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
+/* frames */
+.reel{display:flex;flex-direction:column;gap:22vh;padding-block:12vh 18vh}
+.fr{position:relative;display:grid;gap:18px}
+.fr .pic{position:relative;overflow:hidden;background:#000}
+.fr .pic img{width:100%;height:auto;filter:brightness(.62) contrast(1.12) saturate(.9);transition:filter 1.4s ease}
+.fr.lit .pic img{filter:brightness(1) contrast(1.06) saturate(1);animation:bulb .5s steps(1)}
+@keyframes bulb{0%{filter:brightness(2.4)}20%{filter:brightness(.5)}40%{filter:brightness(1.8)}100%{filter:brightness(1)}}
+.fr .pic::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 120px 30px rgba(0,0,0,.75);pointer-events:none}
+.fr .pic time{position:absolute;right:14px;bottom:12px;z-index:2}
+.strip{display:flex;justify-content:space-between;gap:12px;font:11px/1 var(--mono);letter-spacing:.14em;color:var(--stamp);opacity:.75;
+  padding-block:8px;background:
+  radial-gradient(circle,#000 0 3px,transparent 3.5px) 0 50%/22px 12px repeat-x,#1a0f08}
+.strip span{background:#1a0f08;padding:0 6px}
+.cap{margin:0;font:300 italic clamp(28px,4.4vw,64px)/1.02 var(--serif);text-wrap:balance;color:var(--bone)}
+.cap em{font-style:normal;color:var(--ember)}
+.fire .pic{box-shadow:0 0 90px -10px rgba(255,80,0,.0);animation:burn 3.2s ease-in-out infinite}
+@keyframes burn{0%,100%{box-shadow:0 0 70px -10px rgba(255,80,0,.25)}37%{box-shadow:0 0 120px 0 rgba(255,90,10,.42)}61%{box-shadow:0 0 60px -14px rgba(255,60,0,.2)}}
 
-/* subtitles */
-#subs{position:absolute;z-index:7;left:0;right:0;bottom:calc(var(--bar) + 4vh);display:flex;justify-content:center;padding-inline:20px;pointer-events:none}
-#subs span{max-width:min(900px,92vw);text-align:center;font:400 clamp(19px,2.3vw,30px)/1.3 var(--sans);color:#fff;
-  text-shadow:0 0 2px #000,0 0 2px #000,0 2px 6px #000,0 0 20px rgba(0,0,0,.8);opacity:0;transition:opacity .25s ease}
-#subs span.on{opacity:1}
-#subs span.red{color:#ff5a3a;animation:glitch 2.4s steps(1) infinite}
-#subs span.cross{text-decoration:line-through;text-decoration-thickness:3px;color:#cfc8bd}
-@keyframes glitch{0%,80%,100%{transform:none}82%{transform:translateX(-4px) skewX(-10deg)}84%{transform:translateX(5px)}86%{transform:none}}
-.tap{position:absolute;z-index:7;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--bar) + 10px);opacity:.5}
+/* individual compositions */
+.f1{grid-template-columns:minmax(0,5fr) minmax(0,3fr);align-items:end}
+.f1 .pic{grid-row:1 / span 2}
+.f2{justify-items:center;text-align:center}
+.f2 .pic{width:min(340px,70vw)}
+.f2 .cap{font-size:clamp(22px,3vw,36px);color:var(--ash)}
+.f3{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;align-items:start}
+.f3 .pic:nth-of-type(2){margin-top:14vh}
+.f3 .cap{grid-column:1 / -1;text-align:right}
+.f3 .lbl{display:block;margin-top:8px}
+.f4{margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));width:min(1200px,92vw)}
+.f4 .cap{padding-left:max(16px,env(safe-area-inset-left,0px));max-width:16ch}
+.f5{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:center}
+.f5 .cap{text-align:right}
+.f6{width:min(1100px,100%);margin-left:auto}
+.f6 .cap{max-width:20ch}
+.f7{grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr)}
+.f7 .pic{grid-column:2}
+.f7 .cap{grid-column:1 / -1;text-align:center}
 
-/* fork: the film freezes, two choices, a draining timer */
-#fork{position:absolute;z-index:8;left:0;right:0;bottom:calc(var(--bar) + 3vh);display:none;flex-direction:column;align-items:center;gap:18px;padding-inline:16px}
-#fork.on{display:flex;animation:fadein .5s both}
-#fork .q{font:italic 300 clamp(22px,2.6vw,32px)/1.1 var(--serif);color:var(--bone);text-shadow:0 2px 10px #000}
-#fork .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(760px,100%)}
-#fork button{background:rgba(5,5,5,.72);border:1px solid rgba(236,230,218,.35);padding:18px 14px;cursor:pointer;
-  font:700 clamp(14px,1.6vw,18px)/1.25 var(--sans);letter-spacing:.02em;text-transform:uppercase;transition:background .2s,border-color .2s,color .2s;
-  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-#fork button:hover,#fork button:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
-#fork button.pick{background:var(--bone);color:#000;border-color:var(--bone)}
-#fork button.nope{opacity:.25}
-#fork .timer{width:min(760px,100%);height:3px;background:rgba(255,255,255,.15)}
-#fork .timer i{display:block;height:100%;background:var(--bone);transform-origin:left;animation:drain var(--t,10s) linear both}
-#fork.chosen .timer i{animation-play-state:paused}
-@keyframes drain{to{transform:scaleX(0)}}
-body.frozen #shot img.fg{animation-play-state:paused;filter:brightness(.55) contrast(1.2) saturate(.6) sepia(.2)}
-body.frozen #shot{animation-play-state:paused}
-
-/* title cards: opening and ending */
-#card{position:absolute;inset:0;z-index:9;display:grid;place-items:center;text-align:center;padding:24px;background:#000;opacity:0;pointer-events:none;transition:opacity .6s ease}
-#card.on{opacity:1;pointer-events:auto}
-#card h1{margin:0;font:300 italic clamp(96px,22vw,320px)/.8 var(--serif);letter-spacing:-.06em}
-#card h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
-#card h1 .a{display:inline-block;transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
-#card h2{margin:10px 0 0;font:300 italic clamp(54px,10vw,140px)/.9 var(--serif);letter-spacing:-.03em}
-#card p{margin:40px auto 0;max-width:38ch;font:italic 300 clamp(19px,2.2vw,24px)/1.35 var(--serif);color:var(--ash)}
-#card .tag{color:var(--stamp)}
-.play{margin-top:34px;background:none;border:1px solid var(--bone);padding:16px 26px;cursor:pointer;font:15px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
-.play:hover,.play:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
-.play.ghost{border-color:transparent;color:var(--ash);margin-top:12px}
-.acts{display:flex;flex-direction:column;align-items:center}
-
-/* ending credits roll */
-.credits{height:42vh;overflow:hidden;margin-top:22px;-webkit-mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent)}
-.credits div{animation:roll 26s linear both;padding-top:42vh}
-.credits dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font:15px/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase}
-.credits dt{text-align:right;color:var(--ash)}.credits dd{margin:0;text-align:left}
-.credits .h{grid-column:1/-1;text-align:center;color:var(--stamp);margin-top:18px}
-@keyframes roll{to{transform:translateY(-100%)}}
-.wit{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:12px}
-.wit .n{font:italic 300 clamp(20px,2.6vw,28px)/1.1 var(--serif)}
-.wit .n b{font-weight:500;color:var(--ember)}
-.wit button{font:12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:transparent;border:1px solid var(--ember);padding:12px 16px;cursor:pointer}
-.wit button b{color:var(--ember);font-weight:400}
-.wit button[disabled]{opacity:.6}
-
-#black{position:absolute;inset:0;z-index:8;background:#000;opacity:0;pointer-events:none;transition:opacity .35s ease}
-#black.on{opacity:1}
-#burn{position:absolute;inset:0;z-index:8;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 70% 40%,rgba(255,240,200,.95),rgba(255,120,20,.7) 30%,rgba(120,20,0,.4) 60%,transparent 80%);mix-blend-mode:screen}
-#burn.go{animation:burn .6s ease-out}
-#flash{position:absolute;inset:0;z-index:8;pointer-events:none;background:#fff;opacity:0}
-#flash.go{animation:flash .8s ease-out}
-@keyframes flash{0%{opacity:1}10%{opacity:.95}100%{opacity:0}}
-@keyframes burn{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
-#grain{position:fixed;inset:-10%;width:120%;height:120%;z-index:20;pointer-events:none;opacity:.1;mix-blend-mode:screen}
-#scare{position:fixed;inset:0;z-index:30;pointer-events:none;background:#000 url("img/p10.jpg") center 30%/cover no-repeat;filter:grayscale(1) contrast(1.8) brightness(1.25)}
-@keyframes fadein{from{opacity:0}to{opacity:1}}
+.f9{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:end}
+.f9 .cap{max-width:14ch}
+.f10{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:center}
+.f10 .cap{text-align:right;max-width:15ch;justify-self:end}
+.f11{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}
+.f11 .pic{width:min(640px,100%);justify-self:end}
+.f11 .cap{max-width:16ch;margin-top:12vh}
+.f12{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:end}
+.f12 .pic{width:min(640px,100%)}
+.f12 .cap{text-align:right;max-width:17ch;justify-self:end;margin-bottom:8vh}
+.f13{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:center}
+.f13 .pic{width:min(620px,100%);justify-self:end}
+.f13 .cap{max-width:14ch}
+.f8 .pic{width:min(760px,100%);margin-inline:auto}
+.f8 .cap{text-align:center}
+.end{min-height:70vh;display:grid;place-items:center;text-align:center;padding-block:10vh}
+.end h2{margin:0;font:300 italic clamp(48px,10vw,140px)/.9 var(--serif);letter-spacing:-.03em}
+.end p{margin:24px auto 0;max-width:40ch;font:italic 300 22px/1.3 var(--serif);color:var(--ash)}
+.end .mono{margin-top:40px}
 
 @media (max-width:720px){
-  :root{--bar:clamp(24px,7vh,60px)}
-  #fork .opts{grid-template-columns:1fr}
-  #shot img{--x0:30%;--x1:70%}
-  .credits dl{font-size:12px}
+  .reel{gap:16vh}
+  .f1,.f5{grid-template-columns:1fr}
+  .f1 .pic{grid-row:auto}
+  .f9,.f10,.f11,.f12,.f13{grid-template-columns:1fr}
+  .f13 .pic{justify-self:stretch}
+  .f12 .cap{text-align:left;justify-self:start;order:2;margin-bottom:0}
+  .f11 .pic{justify-self:stretch}
+  .f11 .cap{margin-top:0}
+  .f10 .cap{text-align:left;justify-self:start;order:2}
+  .f5 .cap{text-align:left}
+  .f3 .pic:nth-of-type(2){margin-top:8vh}
+  .f7{grid-template-columns:1fr}
+  .f7 .pic{grid-column:1;width:80%;margin-inline:auto}
 }
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition:none!important}}
-#prog{position:absolute;z-index:6;left:0;right:0;bottom:var(--bar);height:2px;background:rgba(255,255,255,.08)}
-#prog i{display:block;height:100%;width:100%;background:var(--stamp);transform-origin:left;transform:scaleX(0)}
-#pp{background:none;border:0;padding:6px 0;cursor:pointer}
-body.paused #shot img.fg,body.paused #shot{animation-play-state:paused}
-body.paused #subs span{opacity:.35}
-.credits.long{height:58vh}.credits.long div{padding-top:58vh;animation-duration:30s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.jaw{filter:brightness(.8)}}
+/* extras: sound, screamer, secret frame, witnesses */
+#secret{position:fixed;inset:0;z-index:42;pointer-events:none;opacity:0;transition:opacity .5s ease;display:grid;place-items:center}
+#secret.on{opacity:1;transition:opacity 4s ease}
+#secret img{width:min(70vw,720px);filter:invert(1) grayscale(.6) contrast(1.3) brightness(.7);
+  -webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 35%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 35%,transparent 100%)}
+#secret p{position:absolute;bottom:14vh;margin:0;font:italic 300 clamp(20px,3vw,34px)/1.2 var(--serif);color:var(--ash)}
+#scare{position:fixed;inset:0;z-index:70;pointer-events:none;background:#000 url("img/p8.jpg") center 42%/cover no-repeat;filter:grayscale(1) contrast(1.8) brightness(1.25)}
+#snd{position:fixed;z-index:61;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  font:12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ash);background:rgba(5,5,5,.7);border:1px solid #2a2622;padding:9px 12px;cursor:pointer}
+#snd[aria-pressed="true"]{color:var(--stamp);border-color:var(--stamp)}
+#snd:focus-visible,.wit button:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+.wit{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.wit .n{font:italic 300 clamp(24px,3.4vw,40px)/1.1 var(--serif);color:var(--bone)}
+.wit .n b{font-weight:500;color:var(--ember);font-variant-numeric:tabular-nums}
+.wit button{font:13px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--bone);background:transparent;border:1px solid var(--ember);padding:14px 18px;cursor:pointer}
+.wit button b{color:var(--ember);font-weight:400;font-variant-numeric:tabular-nums}
+.wit button[disabled]{opacity:.6}
+/* way to the film section */
+a.film{color:var(--stamp);text-decoration:none;border-bottom:1px solid rgba(255,122,26,.5)}
+a.filmcta{display:inline-flex;flex-direction:column;align-items:center;gap:8px;margin-top:40px;padding:18px 26px;border:1px solid var(--bone);color:var(--bone);text-decoration:none;
+  font:15px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+a.filmcta span{font-size:11px;color:var(--ash)}
+a.film:hover,a.filmcta:hover,a.film:focus-visible,a.filmcta:focus-visible{color:var(--stamp);border-color:var(--stamp);outline:none}
 </style>
+<style>html,body{margin:0}</style>
 </head>
 <body>
 
-<div id="screen" aria-live="polite">
-  <div id="shot"></div>
-  <div class="vig" aria-hidden="true"></div>
-  <div class="scratch" aria-hidden="true"></div><div class="scratch b" aria-hidden="true"></div>
-  <div class="lb t"></div><div class="lb b"></div>
-  <div class="hud t mono"><span id="scn"><span class="rec"></span>плёнка №3</span><span>голос за кадром</span></div>
-  <div class="hud b mono"><button id="pp" class="mono" type="button">❚❚ пауза</button><span id="tc">00:00:00:00</span></div>
-  <div id="subs"><span></span></div>
-  <div id="prog"><i></i></div>
-  <div id="black"></div>
-  <div id="burn"></div>
-  <div id="flash"></div>
-  <div id="card"></div>
-</div>
-<canvas id="grain" width="320" height="320" aria-hidden="true"></canvas>
-<audio id="vo" src="vo.mp3" preload="auto"></audio>
+<canvas id="grain" width="420" height="420" aria-hidden="true"></canvas>
+<div class="scan" aria-hidden="true"></div>
+<div id="dark" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div id="secret" aria-hidden="true"><img src="img/p5.jpg" alt=""><p>Ты не должен был это видеть.</p></div>
+<div id="scare" aria-hidden="true" hidden></div>
+<button id="snd" type="button" aria-pressed="false">звук: выкл</button>
 
-<script>
-/* ---------- film ---------- */
-// one segment per frame; at: when it starts in vo.mp3 (seconds), measured from the pauses in the voice
-var SEG=[
-  {img:null,t:["Эту плёнку нашли у трассы 27 октября.","На всех кадрах одно лицо.","Моё."]},
-  {img:"p15",t:["Бензин кончился в два часа ночи.","Ни одной машины. Только поле.","И огоньки на горизонте."]},
-  {img:"p16",dark:1,t:["У дороги стоял указатель.","На нём кто-то сидел.","Я подумал, что это мешок."]},
-  {img:"p16",t:["Я включил вспышку. Это был не мешок.","Лиц у него было много.","Он показал в поле."]},
-  {img:"p17",t:["Я пошёл на огоньки.","Трава была по пояс.","Огоньки не приближались."]},
-  {img:"p1",t:["В поле паслась лошадь.","Голова у неё была не лошадиная.","Она сказала: «рррр».","Я сделал вид, что не слышал."]},
-  {img:"p11",t:["Потом была бочка, а над ней душ.","Горячую воду отключили в 2003-м.","А тут была. Я залез.","Зря."]},
-  {img:"p12",t:["Мимо проходила такса. Проходила минут сорок.","На ней сидели парни с моим лицом.","Последний помахал мне рукой."]},
-  {img:"p2",t:["Огоньки оказались пожаром. Горел дом.","Перед ним лежал белый конь и смотрел в другую сторону."]},
-  {img:"p5",t:["Я посмотрел туда же. Там стояла моя семья.","Нас было шестеро. У всех было моё лицо.","«Ты опоздал», — сказали они."]},
-  {img:"p18",t:["Я побежал обратно. Посреди поля стояло пугало.","В моей куртке. С моим лицом.","Оно сказало: «Дорога там»."]},
-  {img:"p19",t:["Я вышел к трассе. Мимо ехала старая машина.","За рулём сидел я.","Навигатор у него сказал: «Через двести метров поверните»."]},
-  {img:"p16",dark:1,t:["Теперь на указателе сижу я.","Если едете ночью мимо поля, не включайте вспышку.","Я вас вижу."]}
-];
-var LINES=[[0, 3.28, 6.01], [7.63, 10.3, 13.06], [15.35, 17.38, 18.95], [21.38, 24.59, 26.93], [28.91, 30.74, 32.38], [34.61, 36.6, 38.9, 40.96], [43.81, 46.62, 49.44, 51.94], [53.29, 56.86, 59.25], [62.05, 65.38], [69.52, 73.17, 76.8], [79.61, 83.42, 86.0], [88.96, 92.59, 94.21], [98.75, 101.1, 105.2]]; // when each subtitle line starts, from the short pauses
-var CUES=[0, 7.53, 15.25, 21.28, 28.81, 34.51, 43.71, 53.19, 61.95, 69.42, 79.51, 88.86, 98.65]; // start of each segment in vo.mp3, taken from the long pauses in the voice
+<header class="open g">
+  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><a class="film" href="film/">▶ есть ещё фильм</a><span>15 кадров · проявлено без разрешения</span></div>
+  <h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>
+  <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><time class="st">'03 ?? ??</time></figure>
+  <div class="bottom">
+    <p>Никто из нас не помнит, как это снимали. Лицо на всех кадрах одно.</p>
+    <span class="mono hint">Нажми где угодно, будет вспышка ↓</span>
+  </div>
+</header>
 
-var $=function(id){return document.getElementById(id)};
-var vo=$("vo"),shot=$("shot"),subs=$("subs").firstChild,card=$("card"),black=$("black"),burnEl=$("burn"),bar=$("prog").firstChild;
-var cur=-1,curLine=-1,raf=0,ended=false,flashEl=$("flash");
-function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+<main class="reel g">
+  <figure class="fr f1 fire">
+    <div class="pic"><img src="img/p2.jpg" alt="Горящий дом ночью, перед ним лежит белый конь с человеческим лицом на боку"><time class="st">'03 10 27</time></div>
+    <div class="strip"><span>KODAK 400</span><span>▸ 1</span></div>
+    <figcaption class="cap">Дом горел. Конь смотрел <em>в другую сторону.</em></figcaption>
+  </figure>
 
-// fallback when no cues: spread segments over the track by text length
-function cues(){
-  if(CUES)return CUES;
-  var d=vo.duration||120,len=SEG.map(function(s){return s.t.join(" ").length+40}),tot=len.reduce(function(a,b){return a+b},0),acc=0;
-  return len.map(function(l){var a=acc/tot*d;acc+=l;return a});
-}
-function frame(img,dark){
-  black.classList.add("on");
-  setTimeout(function(){
-    shot.innerHTML="";shot.classList.toggle("dark",!!dark);black.classList.remove("on");if(!img)return;
-    var bg=new Image(),el=new Image();bg.src=el.src="img/"+img+".jpg";bg.alt=el.alt="";bg.className="bg";el.className="fg";
-    var up=Math.random()<.5;
-    el.style.setProperty("--y0",up?"85%":"15%");el.style.setProperty("--y1",up?"15%":"85%");el.style.setProperty("--o",up?"25%":"70%");el.style.setProperty("--dur","14s");
-    shot.appendChild(bg);shot.appendChild(el);
-    requestAnimationFrame(function(){requestAnimationFrame(function(){bg.classList.add("on");el.classList.add("on")})});
-  },300);
-}
-function line(txt){
-  subs.className="";
-  setTimeout(function(){subs.textContent=txt;subs.className=txt?"on":""},180);
-}
-function tick(){
-  var t=vo.currentTime,c=cues(),i=0;
-  while(i+1<c.length&&t>=c[i+1])i++;
-  if(i!==cur){
-    var prev=SEG[cur];cur=i;curLine=-1;
-    // the dark signpost followed by the same frame: the flash fires instead of a cut
-    if(prev&&prev.img===SEG[i].img&&prev.dark&&!SEG[i].dark){shot.classList.remove("dark");flashEl.classList.remove("go");void flashEl.offsetWidth;flashEl.classList.add("go")}
-    else frame(SEG[i].img,SEG[i].dark);$("scn").innerHTML='<span class="rec"></span>кадр '+("0"+(i+1)).slice(-2)+' / '+SEG.length;
-    if(i===SEG.length-1){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
-  // which sentence inside the segment, from the short pauses in the voice
-  var lines=SEG[i].t,at=LINES[i],j=0;
-  while(j+1<lines.length&&t>=at[j+1])j++;
-  if(j!==curLine){curLine=j;line(lines[j])}
-  bar.style.transform="scaleX("+(vo.duration?t/vo.duration:0)+")";
-  var sec=Math.floor(t),f=Math.floor(t*24)%24;
-  $("tc").textContent=["00",("0"+Math.floor(sec/60)).slice(-2),("0"+sec%60).slice(-2),("0"+f).slice(-2)].join(":");
-  if(!vo.paused)raf=requestAnimationFrame(tick);
-}
-var CREDITS=[["В ролях",""],["Он","Д."],["Он же на указателе","Д."],["Пугало","Д."],["Семья","Д. Д. Д. Д. Д."],["Очередь на таксе","Д. ×14"],["Белый конь","смотрел в другую сторону"],
-  ["Лошадь в поле","рррр"],["Водитель","Д."],["Вороны","местные"],
-  ["Съёмочная группа",""],["Оператор","неизвестен"],["Свет","вспышка"],["Голос","тот, кто внутри"],["Монтаж","никто не помнит"]]
-  .map(function(r){return r[1]?'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>':'<span class="h">'+r[0]+'</span>'}).join("")+
-  '<span class="h">Плёнка найдена у трассы 27.10</span><span class="h">Никто не пострадал. Наверное.</span>';
-function finale(){
-  ended=true;cancelAnimationFrame(raf);line("");
-  card.innerHTML='<div><div class="mono tag">конец плёнки</div><h2>Дурка</h2>'+
-    '<div class="credits long"><div><dl>'+CREDITS+'</dl></div></div>'+
-    '<div class="acts"><button class="play" type="button" data-go="again">смотреть ещё раз</button></div>'+
-    '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й зритель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div>';
-  setTimeout(function(){card.classList.add("on");witness()},1500);
-}
-function start(){
-  ended=false;cur=-1;card.classList.remove("on");document.body.classList.remove("open","paused");
-  vo.currentTime=0;var pr=vo.play();if(pr&&pr.catch)pr.catch(function(){});
-  window.durkaHum&&window.durkaHum(true);
-  cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
-}
-function togglePause(){
-  if(ended||document.body.classList.contains("open"))return;
-  if(vo.paused){vo.play();document.body.classList.remove("paused");$("pp").textContent="❚❚ пауза";raf=requestAnimationFrame(tick)}
-  else{vo.pause();document.body.classList.add("paused");$("pp").textContent="▶ дальше"}
-}
-vo.addEventListener("ended",finale);
-$("pp").addEventListener("click",function(e){e.stopPropagation();togglePause()});
-$("screen").addEventListener("click",function(e){if(!e.target.closest("#card,button"))togglePause()});
-addEventListener("keydown",function(e){if(e.key===" "&&!e.target.closest("button")){e.preventDefault();togglePause()}});
-card.addEventListener("click",function(e){var b=e.target.closest("[data-go]");if(!b)return;e.stopPropagation();start()});
-document.addEventListener("visibilitychange",function(){if(document.hidden&&!vo.paused)togglePause()});
+  <figure class="fr f2">
+    <div class="pic"><img src="img/p3.jpg" alt="Единорог сидит на диване в советской квартире рядом с человеком в маске"><time class="st">'03 1 01</time></div>
+    <figcaption class="cap">Он пришёл на Новый год и остался.</figcaption>
+  </figure>
 
-function intro(){
-  document.body.classList.add("open");
-  card.innerHTML='<div><h1 aria-label="дурка">д<span class="k">у</span>рк<span class="a">а</span></h1>'+
-    '<p>Плёнку нашли у трассы 27 октября. Полторы минуты. Смотреть со звуком и в темноте.</p>'+
-    '<div class="acts"><button class="play" type="button" data-go="start">▶ смотреть</button></div></div>';
-  card.classList.add("on");
-}
-intro();
+  <figure class="fr f3">
+    <div class="pic"><img src="img/p0.jpg" alt="Человек в многоликой маске сидит на дорожном указателе, без вспышки"><span class="mono lbl">без вспышки</span></div>
+    <div class="pic"><img src="img/p7.jpg" alt="Тот же человек на указателе, со вспышкой"><time class="st">'03 10 31</time><span class="mono lbl">со вспышкой</span></div>
+    <figcaption class="cap">Указатель указывал <em>на него.</em></figcaption>
+  </figure>
 
-/* ---------- viewer counter ---------- */
-function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
-var offline={visit:666,seen:0};
-function api(method,k){return fetch("/api/witness"+(k?"?k="+k:""),{method:method,cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()})}
-function witness(){
-  var vN=$("visitN"),sN=$("seenN"),sb=$("seen");
-  function fill(d){vN.textContent=d.visit;sN.textContent=d.seen}
-  var firstVisit=!get("durka-visit");
-  api(firstVisit?"POST":"GET",firstVisit?"visit":"").then(function(d){put("durka-visit","1");fill(d)}).catch(function(){fill(offline)});
-  if(get("durka-seen"))sb.disabled=true;
-  sb.addEventListener("click",function(e){
-    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");
-    api("POST","seen").then(fill).catch(function(){offline.seen++;fill(offline)});
-  });
-}
+  <figure class="fr f4">
+    <div class="pic"><img src="img/p1.jpg" alt="В ночном поле лошадь с головой динозавра рычит на человека с налобным фонарём"></div>
+    <figcaption class="cap">Лошадь сказала «рррр». Мы сделали вид, что не слышали.</figcaption>
+  </figure>
 
-/* ---------- browser tab calls you back ---------- */
-var title=document.title,tt;
-document.addEventListener("visibilitychange",function(){
-  clearInterval(tt);
-  if(document.hidden){var w=["вернись","он здесь","фильм не закончился","мы ждём"],i=0;document.title=w[0];tt=setInterval(function(){i=(i+1)%w.length;document.title=w[i]},1500)}
-  else document.title=title;
-});
-</script>
+  <figure class="fr f5 fire">
+    <figcaption class="cap">Гномы спасают лес. <em>Лес не просил.</em></figcaption>
+    <div class="pic"><img src="img/p4.jpg" alt="Горящая ёлка, гномы с ведром «Гномы спасают лес», рядом огромный палец"><time class="st">'03 12 31</time></div>
+  </figure>
+
+  <figure class="fr f6 fire">
+    <div class="strip"><span>▸ 6</span><span>KODAK 400</span></div>
+    <div class="pic"><img src="img/p5.jpg" alt="Семья из шести человек перед горящим домом, у всех одно и то же лицо"></div>
+    <figcaption class="cap">Нас было шестеро. У всех было <em>моё лицо.</em></figcaption>
+  </figure>
+
+  <figure class="fr f7">
+    <div class="pic"><img src="img/p6.jpg" alt="Человек обнимает ёлку ночью, рядом из травы растёт гигантский палец"><time class="st">'03 8 05</time></div>
+    <figcaption class="cap">Палец рос там всегда. Мы просто не смотрели вниз.</figcaption>
+  </figure>
+
+  <figure class="fr f9">
+    <div class="pic"><img src="img/p10.jpg" alt="Парень верхом на толстом коне с чёлкой-горшком держит заправочный пистолет у старой колонки, над ними горит люстра"><time class="st">'03 11 02</time></div>
+    <figcaption class="cap">Я приехал заправиться. <em>Но была одна проблема.</em></figcaption>
+  </figure>
+
+  <figure class="fr f10 fire">
+    <figcaption class="cap">Горячую воду отключили в 2003-м. <em>Я до сих пор жду.</em></figcaption>
+    <div class="pic"><img src="img/p11.jpg" alt="Парень сидит по шею в синей бочке с водой посреди ночного поля, над ним льёт душ, вдали горит дом"><time class="st">'03 9 14</time></div>
+  </figure>
+
+  <figure class="fr f11 fire">
+    <div class="pic"><img src="img/p12.jpg" alt="Ночью на бесконечно длинной таксе сидит очередь одинаковых парней с одним лицом, вдали горит дом"><time class="st">'03 6 22</time></div>
+    <figcaption class="cap">Я сел первым. <em>Остальные подсели по дороге.</em></figcaption>
+  </figure>
+
+  <figure class="fr f12">
+    <figcaption class="cap">Он сказал, что ужин будет через пять минут. <em>Он не сказал, кто ужин.</em></figcaption>
+    <div class="pic"><img src="img/p13.jpg" alt="Парень с вилкой и ножом сидит за кухонным столом перед пустой тарелкой, за ним у плиты стоит лев в фартуке"><time class="st">'03 2 14</time></div>
+  </figure>
+
+  <figure class="fr f13">
+    <div class="pic"><img src="img/p14.jpg" alt="Ночью на лесной тропе медведь на задних лапах несёт на груди в детской переноске взрослого парня, тот смотрит в камеру"><time class="st">'03 8 23</time></div>
+    <figcaption class="cap">Я давно вырос. <em>Он считает, что я ещё маленький.</em></figcaption>
+  </figure>
+
+  <figure class="fr f8">
+    <div class="pic"><img src="img/p9.jpg" alt="Маленький парусник в тёмном море, под водой проступает огромное лицо"><time class="st">'03 7 19</time></div>
+    <figcaption class="cap">Море было спокойным. <em>Просто оно смотрело.</em></figcaption>
+  </figure>
+</main>
+
+<footer class="end g">
+  <div>
+    <h2>конец плёнки</h2>
+    <p>Если вы узнали человека на снимках, не говорите ему.</p>
+    <div class="mono">36 кадров · 15 проявлено · 21 сгорело</div>
+    <a class="filmcta" href="film/">▶ смотреть фильм <span>серия первая</span></a>
+    <div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div>
+  </div>
+</footer>
+
 <script>
 (function(){
+  var root=document.documentElement, dark=document.getElementById("dark");
+  function move(x,y){dark.style.setProperty("--x",x+"px");dark.style.setProperty("--y",y+"px")}
+  addEventListener("pointermove",function(e){move(e.clientX,e.clientY)},{passive:true});
+
+  var fl=document.getElementById("flash"), t;
+  addEventListener("click",function(e){
+    move(e.clientX,e.clientY);
+    fl.classList.remove("go");void fl.offsetWidth;fl.classList.add("go");
+    document.body.classList.add("flashed");clearTimeout(t);
+    t=setTimeout(function(){document.body.classList.remove("flashed")},1600);
+  });
+
   // film grain
-  var c=document.getElementById("grain"),x=c.getContext("2d"),img=x.createImageData(320,320),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,last=0;
+  var c=document.getElementById("grain"),x=c.getContext("2d"),img=x.createImageData(420,420),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,last=0;
   function grain(ts){
-    if(ts-last>60){last=ts;var d=img.data;for(var i=0;i<d.length;i+=4){var v=Math.random()*255|0;d[i]=v;d[i+1]=v*.92|0;d[i+2]=v*.8|0;d[i+3]=255}x.putImageData(img,0,0)}
+    if(ts-last>70){last=ts;var d=img.data;for(var i=0;i<d.length;i+=4){var v=Math.random()*255|0;d[i]=v;d[i+1]=v*.92|0;d[i+2]=v*.8|0;d[i+3]=255}x.putImageData(img,0,0)}
     if(!reduce)requestAnimationFrame(grain);
   }
   requestAnimationFrame(grain);
 
-  // under the voice: a low hum and the projector clattering, quiet
-  var ac=null;
+  // frames light up as they reach the middle of the screen
+  if("IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){e.target.classList.toggle("lit",e.isIntersecting)})},{rootMargin:"-35% 0px -35% 0px"});
+    document.querySelectorAll(".fr").forEach(function(f){io.observe(f)});
+  }
+})();
+</script>
+<script>
+(function(){
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---- sound: shutter on every flash, low hum and fire crackle underneath
+  var ac=null,on=false,amb=null,crack=null,btn=document.getElementById("snd");
   function noise(sec){var b=ac.createBuffer(1,ac.sampleRate*sec|0,ac.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
   function burst(t,dur,freq,vol){var s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=noise(dur);f.type="highpass";f.frequency.value=freq;
     g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f).connect(g).connect(ac.destination);s.start(t)}
-  window.durkaHum=function(){
+  window.durkaShutter=function(loud){if(!on)return;var t=ac.currentTime;burst(t,.05,1800,loud?.9:.5);burst(t+.07,.09,900,loud?.7:.35);if(loud)burst(t+.02,.5,200,.6)};
+  function startAmb(){
+    var g=ac.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.05,ac.currentTime+3);g.connect(ac.destination);
+    [41,55.3,82.4].forEach(function(f,i){var o=ac.createOscillator();o.frequency.value=f;var og=ac.createGain();og.gain.value=[1,.7,.25][i];o.connect(og).connect(g);o.start()});
+    amb=g;
+    crack=setInterval(function(){if(Math.random()<.55){var t=ac.currentTime;burst(t,.015+Math.random()*.03,1200+Math.random()*2500,.04+Math.random()*.08)}},90);
+  }
+  function setSound(v){
     try{
-      if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
-        var g=ac.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.035,ac.currentTime+3);g.connect(ac.destination);
-        [41,55.3,82.4].forEach(function(f,i){var o=ac.createOscillator();o.frequency.value=f;var og=ac.createGain();og.gain.value=[1,.7,.25][i];o.connect(og).connect(g);o.start()});
-        setInterval(function(){var b=document.body.classList;if(!b.contains("paused")&&!b.contains("open"))burst(ac.currentTime,.012,2600,.015+Math.random()*.015)},42);
-      }
-      ac.resume();
+      if(v&&!ac){ac=new (window.AudioContext||window.webkitAudioContext)();startAmb()}
+      if(ac){v?ac.resume():ac.suspend()}
+      on=v;btn.setAttribute("aria-pressed",v?"true":"false");btn.textContent=v?"звук: вкл":"звук: выкл";
     }catch(e){}
-  };
-  document.getElementById("vo").addEventListener("pause",function(){ac&&ac.suspend()});
-  document.getElementById("vo").addEventListener("play",function(){ac&&ac.resume()});
+  }
+  var first=true;
+  addEventListener("click",function(e){
+    if(e.target===btn){setSound(!on);first=false;return}
+    if(first){first=false;setSound(true)}
+    window.durkaShutter(false);
+  });
+
+  // ---- secret frame shows up after a while of stillness
+  var sec=document.getElementById("secret"),idle;
+  function wake(){sec.classList.remove("on");clearTimeout(idle);idle=setTimeout(function(){sec.classList.add("on")},12000)}
+  wake();
+
+  addEventListener("pointermove",function(e){wake()},{passive:true});
+  addEventListener("scroll",wake,{passive:true});
+  addEventListener("keydown",wake);
+
+  // ---- screamer: once a minute the face fills the screen for a blink
+  var sc=document.getElementById("scare");
+  function scare(){
+    if(document.visibilityState==="visible"&&!reduce){sc.hidden=false;window.durkaShutter(true);setTimeout(function(){sc.hidden=true},140)}
+    setTimeout(scare,55000+Math.random()*15000);
+  }
+  setTimeout(scare,40000);
+
+  // ---- browser tab calls you back
+  var title=document.title,tt;
+  document.addEventListener("visibilitychange",function(){
+    clearInterval(tt);
+    if(document.hidden){var w=["вернись","он здесь","не закрывай","мы ждём"],i=0;document.title=w[0];tt=setInterval(function(){i=(i+1)%w.length;document.title=w[i]},1500)}
+    else document.title=title;
+  });
+
+  // ---- witnesses counter
+  var vN=document.getElementById("visitN"),sN=document.getElementById("seenN"),sb=document.getElementById("seen");
+  function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function show(d){vN.textContent=d.visit;sN.textContent=d.seen}
+  function api(method,k){return fetch("/api/witness"+(k?"?k="+k:""),{method:method,cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()})}
+  var offline={visit:666,seen:0};
+  var firstVisit=!get("durka-visit");
+  api(firstVisit?"POST":"GET",firstVisit?"visit":"").then(function(d){put("durka-visit","1");show(d)}).catch(function(){show(offline)});
+  if(get("durka-seen")){sb.disabled=true}
+  sb.addEventListener("click",function(e){
+    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");window.durkaShutter(false);
+    api("POST","seen").then(show).catch(function(){offline.seen++;show(offline)});
+  });
 })();
 </script>
+
 </body>
 </html>
