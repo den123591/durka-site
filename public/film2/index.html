@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Дурка: Пробы</title>
+<title>Дурка: фильм 2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&family=PT+Sans:wght@400;700&display=swap">
 <style>
 /* Layout: a found film that plays full screen with a narrator. Frames change in sync with the voice, the camera slowly crawls
@@ -142,20 +142,6 @@ a.play{color:var(--bone);text-decoration:none;margin-top:14px}
 body.paused #shot img.fg,body.paused #shot{animation-play-state:paused}
 body.paused #subs span{opacity:.35}
 .credits.long{height:58vh}.credits.long div{padding-top:58vh;animation-duration:30s}
-/* clapperboard before each take */
-#slate{position:absolute;z-index:6;left:50%;top:50%;width:min(340px,74vw);transform:translate(-50%,-50%) rotate(-3deg);background:#0b0b0b;border:2px solid var(--bone);opacity:0;pointer-events:none;box-shadow:0 10px 40px #000}
-#slate.go{animation:slate 1.5s ease-out both}
-#slate .arm{height:30px;background:repeating-linear-gradient(-45deg,var(--bone) 0 18px,#0b0b0b 18px 36px);border-bottom:2px solid var(--bone);transform-origin:0 100%}
-#slate.go .arm{animation:clap .35s cubic-bezier(.6,0,.9,.4) both}
-#slate .row{display:flex;justify-content:space-between;padding:12px 16px 0;font:12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ash)}
-#slate .big{padding:8px 16px 16px;font:400 clamp(30px,8vw,46px)/1 var(--mono);color:var(--bone);letter-spacing:.04em}
-#slate.final .big{color:var(--stamp)}
-@keyframes slate{0%{opacity:0}8%{opacity:1}75%{opacity:1}100%{opacity:0}}
-@keyframes clap{from{transform:rotate(-24deg)}to{transform:rotate(0)}}
-#slate.hold{animation:none;opacity:1}
-/* who is speaking */
-#subs span.dir{color:#cfc6b8;font-style:italic}
-#subs span.dir::before{content:"реж.  ";font:11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ash);font-style:normal;vertical-align:3px}
 </style>
 </head>
 <body>
@@ -165,13 +151,12 @@ body.paused #subs span{opacity:.35}
   <div class="vig" aria-hidden="true"></div>
   <div class="scratch" aria-hidden="true"></div><div class="scratch b" aria-hidden="true"></div>
   <div class="lb t"></div><div class="lb b"></div>
-  <div class="hud t mono"><span id="scn"><span class="rec"></span>кастинг</span><span>пробы на роль д.</span></div>
+  <div class="hud t mono"><span id="scn"><span class="rec"></span>плёнка №4 · кафе</span><span>голос за кадром</span></div>
   <div class="hud b mono"><button id="pp" class="mono" type="button">❚❚ пауза</button><span id="tc">00:00:00:00</span></div>
   <div id="subs"><span></span></div>
   <div id="prog"><i></i></div>
   <div id="black"></div>
   <div id="burn"></div>
-  <div id="slate" aria-hidden="true"><div class="arm"></div><div class="row"><span>«д.»</span><span id="slR">роль: д.</span></div><div class="big" id="slN">проба 1</div></div>
   <div id="flash"></div>
   <div id="card"></div>
 </div>
@@ -182,21 +167,16 @@ body.paused #subs span{opacity:.35}
 /* ---------- film ---------- */
 // one segment per frame; at: when it starts in vo.mp3 (seconds), measured from the pauses in the voice
 var SEG=[
-  {img:"p22",slate:"проба 1",t:["~Представьтесь.","Д.","~Ещё раз.","Д.","~Не верю."]},
-  {img:"p13",slate:"проба 4",t:["~Проба четыре. Вы голодны. Сыграйте голод.","Я не голоден.","~Вот поэтому. Следующий."]},
-  {img:"p14",slate:"проба 9",t:["~Проба девять. Вас несут. Вам страшно?","Нет.","~А должно быть."]},
-  {img:"p11",slate:"проба 12",t:["~Проба двенадцать. Вода тёплая. Не спрашивайте почему."]},
-  {img:"p12",slate:"проба 20",t:["Кто все эти люди?","~Тоже пробуются. На вас."]},
-  {img:"p5",slate:"проба 27",t:["~Шесть дублей. Ни один не похож.","Это моя семья.","~Это массовка."]},
-  {img:"p16",dark:1,slate:"проба 36",t:["~Проба тридцать шесть."]},
-  {img:"p16",t:["~Вот. Вот этот подходит."]},
-  {img:"p23",t:["А я?","~А вы в поле. К остальным."]},
-  {img:"p24",t:["Их было тридцать пять. Я был тридцать шестым."]},
-  {img:null,slate:"снято",t:["~Снято."]},
-  {img:null,slate:"next",fin:1,t:["~Следующий."]}
+  {img:"p25",t:["Указатель показывал на кафе. Оно работало круглосуточно.", "Машина остановилась сама. Я зашёл погреться."]},
+  {img:"p26",t:["За стойкой стояла продавщица. С моим лицом.", "«Вам как обычно?» — спросила она.", "Я был здесь впервые."]},
+  {img:"p27",t:["У окна сидели дальнобойщики. Все ели молча.", "И жевали одновременно."]},
+  {img:"p28",t:["В меню было одно блюдо. Мне его принесли.", "В бульоне было моё лицо.", "Оно моргнуло."]},
+  {img:"p29",dark:1,t:["Я поднял глаза."]},
+  {img:"p29",t:["За стеклом стоял он.", "Лиц у него стало на одно больше."]},
+  {img:"p30",t:["Утром я стоял за стойкой. В фартуке.", "Дверь открылась.", "«Вам как обычно?»"]}
 ];
-var LINES=[[1.5, 3.02, 4.29, 5.74, 7.17], [9.92, 14.03, 15.81], [19.27, 23.01, 24.27], [26.77], [31.78, 33.71], [37.0, 40.01, 41.87], [44.29], [46.59], [49.9, 51.16], [54.44], [59.24], [61.69]]; // when each line starts in vo.mp3
-var CUES=[0.6, 8.62, 17.97, 25.47, 30.48, 35.7, 42.99, 45.59, 48.5, 53.04, 57.64, 59.89]; // segment starts, a clap 0.25 s after each slate
+var LINES=[[0.8, 5.83], [10.23, 14.51, 17.8], [20.27, 24.34], [26.92, 30.92, 33.4], [35.55], [37.24, 40.06], [43.24, 46.86, 49.1]]; // when each subtitle line starts, from the short pauses
+var CUES=[0, 9.93, 19.97, 26.62, 35.25, 36.99, 42.94]; // start of each segment in vo.mp3, taken from the long pauses in the voice
 
 var $=function(id){return document.getElementById(id)};
 var vo=$("vo"),shot=$("shot"),subs=$("subs").firstChild,card=$("card"),black=$("black"),burnEl=$("burn"),bar=$("prog").firstChild;
@@ -221,8 +201,8 @@ function frame(img,dark){
   },300);
 }
 function line(txt){
-  subs.className="";var dir=txt&&txt.charAt(0)==="~";if(dir)txt=txt.slice(1);
-  setTimeout(function(){subs.textContent=txt;subs.className=txt?(dir?"on dir":"on"):""},180);
+  subs.className="";
+  setTimeout(function(){subs.textContent=txt;subs.className=txt?"on":""},180);
 }
 function tick(){
   var t=vo.currentTime,c=cues(),i=0;
@@ -232,7 +212,7 @@ function tick(){
     // the dark signpost followed by the same frame: the flash fires instead of a cut
     if(prev&&prev.img===SEG[i].img&&prev.dark&&!SEG[i].dark){shot.classList.remove("dark");flashEl.classList.remove("go");void flashEl.offsetWidth;flashEl.classList.add("go")}
     else frame(SEG[i].img,SEG[i].dark);$("scn").innerHTML='<span class="rec"></span>кадр '+("0"+(i+1)).slice(-2)+' / '+SEG.length;
-    if(SEG[i].slate)slate(SEG[i].slate,SEG[i].fin);if(SEG[i].burn){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
+    if(SEG[i].burn){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
   // which sentence inside the segment, from the short pauses in the voice
   var lines=SEG[i].t,at=LINES[i],j=0;
   while(j+1<lines.length&&t>=at[j+1])j++;
@@ -242,19 +222,16 @@ function tick(){
   $("tc").textContent=["00",("0"+Math.floor(sec/60)).slice(-2),("0"+sec%60).slice(-2),("0"+f).slice(-2)].join(":");
   if(!vo.paused)raf=requestAnimationFrame(tick);
 }
-var slEl=$("slate"),viewerN=37;
-function slate(txt,fin){slEl.className="";$("slN").textContent=fin?"проба "+viewerN:txt;$("slR").textContent=fin?"роль: вы":"роль: д.";void slEl.offsetWidth;slEl.className=fin?"go final hold":"go"}
 function finale(){
   ended=true;cancelAnimationFrame(raf);line("");
-  card.innerHTML='<div><div class="mono tag">серия вторая · пробы</div><h2>Следующий</h2>'+
-    '<p>Вы пробуетесь на роль. Режиссёр уже смотрит. Сядьте ровно и не моргайте.</p>'+
-    '<div class="acts"><button class="play" type="button" data-go="again">ещё дубль</button><a class="play ghost" href="../film/">← серия первая</a><a class="play ghost" href="../">← на главную</a></div>'+
+  card.innerHTML='<div><div class="mono tag">фильм 2 · конец плёнки</div><h2>Как обычно</h2>'+
+    '<p>Кафе у трассы работает круглосуточно. Если заедете, не заказывайте бульон.</p>'+
+    '<div class="acts"><button class="play" type="button" data-go="again">смотреть ещё раз</button><a class="play" href="../film/">← фильм 1: петля в поле</a><a class="play ghost" href="../">← на главную</a></div>'+
     '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й зритель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div>';
   setTimeout(function(){card.classList.add("on");witness()},1500);
 }
 function start(){
-  ended=false;slEl.className="";
-  api("GET","").then(function(d){viewerN=d.visit+(get("durka-visit")?0:1)}).catch(function(){});cur=-1;card.classList.remove("on");document.body.classList.remove("open","paused");
+  ended=false;cur=-1;card.classList.remove("on");document.body.classList.remove("open","paused");
   vo.currentTime=0;var pr=vo.play();if(pr&&pr.catch)pr.catch(function(){});
   window.durkaHum&&window.durkaHum(true);
   cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
@@ -274,7 +251,7 @@ document.addEventListener("visibilitychange",function(){if(document.hidden&&!vo.
 function intro(){
   document.body.classList.add("open");
   card.innerHTML='<div><h1 aria-label="дурка">д<span class="k">у</span>рк<span class="a">а</span></h1>'+
-    '<p>Серия вторая. Пробы на роль Д. Смотреть со звуком и в темноте.</p>'+
+    '<p>Фильм 2. Кафе у трассы. Продолжение «Петли в поле». Смотреть со звуком и в темноте.</p>'+
     '<div class="acts"><button class="play" type="button" data-go="start">▶ смотреть</button><a class="play ghost" href="../">← на главную</a></div></div>';
   card.classList.add("on");
 }
