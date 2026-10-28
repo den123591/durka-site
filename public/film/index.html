@@ -169,10 +169,19 @@ var SEG=[
   {img:null,t:["Эту плёнку нашли у трассы 27 октября.","На всех кадрах одно лицо.","Моё."]},
   {img:"p15",t:["Бензин кончился в два часа ночи.","Ни одной машины. Только поле.","И огоньки на горизонте."]},
   {img:"p16",dark:1,t:["У дороги стоял указатель.","На нём кто-то сидел.","Я подумал, что это мешок."]},
-  {img:"p16",t:["Я включил вспышку. Это был не мешок.","Лиц у него было много.","Он показал в поле."]}
+  {img:"p16",t:["Я включил вспышку. Это был не мешок.","Лиц у него было много.","Он показал в поле."]},
+  {img:"p17",t:["Я пошёл туда, куда он показал.","Огоньки не приближались.","А потом вдруг оказались совсем рядом."]},
+  {img:"p2",burn:1,t:["Горел дом.","Перед ним лежал белый конь и смотрел в другую сторону."]},
+  {img:"p5",t:["Я посмотрел туда же.","Там стояла моя семья.","Нас было шестеро.","У всех было моё лицо.","«Ты опоздал», — сказали они."]},
+  {img:"p20",dark:1,t:["Я побежал к машине.","Обернулся и нажал на вспышку."]},
+  {img:"p20",t:["Он стоял у заднего стекла."]},
+  {img:"p21",dark:1,t:["Я сел за руль.","Вспышка сработала сама."]},
+  {img:"p21",t:["В зеркале было много лиц.","И все смотрели на меня."]},
+  {img:"p19",t:["Машина завелась сама.","Навигатор сказал: «Через двести метров поверните».","Поворота не было.","Был указатель."]},
+  {img:"p16",dark:1,t:["И на нём кто-то сидел."]}
 ];
-var LINES=[[0, 3.28, 6.01], [7.63, 10.3, 13.06], [15.35, 17.38, 18.95], [21.38, 24.59, 26.93]]; // when each subtitle line starts, from the short pauses
-var CUES=[0, 7.53, 15.25, 21.28]; // start of each segment in vo.mp3, taken from the long pauses in the voice
+var LINES=[[0, 3.28, 6.01], [7.63, 10.3, 13.06], [15.35, 17.38, 18.95], [21.38, 24.59, 26.93], [29.6, 31.99, 34.15], [38.64, 40.03], [45.41, 47.3, 49.2, 50.81, 53.14], [57.02, 58.7], [62.37], [65.92, 67.26], [69.2, 72.21], [75.93, 77.71, 81.62, 82.93], [84.74]]; // when each subtitle line starts, from the short pauses
+var CUES=[0, 7.53, 15.25, 21.28, 29.4, 38.34, 45.11, 56.72, 62.1, 65.62, 68.98, 75.63, 84.4]; // start of each segment in vo.mp3, taken from the long pauses in the voice
 
 var $=function(id){return document.getElementById(id)};
 var vo=$("vo"),shot=$("shot"),subs=$("subs").firstChild,card=$("card"),black=$("black"),burnEl=$("burn"),bar=$("prog").firstChild;
@@ -208,7 +217,7 @@ function tick(){
     // the dark signpost followed by the same frame: the flash fires instead of a cut
     if(prev&&prev.img===SEG[i].img&&prev.dark&&!SEG[i].dark){shot.classList.remove("dark");flashEl.classList.remove("go");void flashEl.offsetWidth;flashEl.classList.add("go")}
     else frame(SEG[i].img,SEG[i].dark);$("scn").innerHTML='<span class="rec"></span>кадр '+("0"+(i+1)).slice(-2)+' / '+SEG.length;
-    if(i===SEG.length-1){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
+    if(SEG[i].burn){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
   // which sentence inside the segment, from the short pauses in the voice
   var lines=SEG[i].t,at=LINES[i],j=0;
   while(j+1<lines.length&&t>=at[j+1])j++;
@@ -220,8 +229,8 @@ function tick(){
 }
 function finale(){
   ended=true;cancelAnimationFrame(raf);line("");
-  card.innerHTML='<div><div class="mono tag">серия первая</div><h2>Продолжение следует</h2>'+
-    '<p>Он показал в поле. Что было дальше, пока не проявили.</p>'+
+  card.innerHTML='<div><div class="mono tag">конец плёнки</div><h2>Петля</h2>'+
+    '<p>Указатель до сих пор стоит у трассы. Если проедете мимо ночью, не включайте вспышку.</p>'+
     '<div class="acts"><button class="play" type="button" data-go="again">смотреть ещё раз</button><a class="play ghost" href="../">← на главную</a></div>'+
     '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й зритель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div>';
   setTimeout(function(){card.classList.add("on");witness()},1500);
@@ -247,7 +256,7 @@ document.addEventListener("visibilitychange",function(){if(document.hidden&&!vo.
 function intro(){
   document.body.classList.add("open");
   card.innerHTML='<div><h1 aria-label="дурка">д<span class="k">у</span>рк<span class="a">а</span></h1>'+
-    '<p>Плёнку нашли у трассы 27 октября. Серия первая. Смотреть со звуком и в темноте.</p>'+
+    '<p>Плёнку нашли у трассы 27 октября. Петля в поле. Смотреть со звуком и в темноте.</p>'+
     '<div class="acts"><button class="play" type="button" data-go="start">▶ смотреть</button><a class="play ghost" href="../">← на главную</a></div></div>';
   card.classList.add("on");
 }
