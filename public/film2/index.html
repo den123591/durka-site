@@ -27,6 +27,7 @@ button{font:inherit;color:inherit}
 #shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;
   filter:brightness(.82) contrast(1.12) saturate(.85) sepia(.12);animation:kb var(--dur,40s) cubic-bezier(.25,.1,.4,1) both,flick 5s steps(1) infinite}
 #shot img.on{opacity:1}
+#shot img.fg{transform-origin:var(--fx,50%) 50%}
 /* the same frame before the flash fires: only a faint outline in the dark */
 #shot.dark::after{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 50% 35%,rgba(0,4,16,.55),rgba(0,0,0,.9) 75%)}
 /* wide screens: the whole portrait frame in the middle, its own blurred glow fills the sides */
@@ -170,7 +171,7 @@ var SEG=[
   {img:"p25",t:["Указатель показывал на кафе. Оно работало круглосуточно.", "Машина остановилась сама. Я зашёл погреться."]},
   {img:"p26",t:["За стойкой стояла продавщица. С моим лицом.", "«Вам как обычно?» — спросила она.", "Я был здесь впервые."]},
   {img:"p27",t:["У окна сидели дальнобойщики. Все ели молча.", "И жевали одновременно."]},
-  {img:"p28",t:["В меню было одно блюдо. Мне его принесли.", "Ложка была с моим лицом.", "Оно моргнуло."]},
+  {img:"p28",fx:"100%",t:["В меню было одно блюдо. Мне его принесли.", "Ложка была с моим лицом.", "Оно моргнуло."]},
   {img:"p29",dark:1,t:["Я поднял глаза."]},
   {img:"p29",t:["За стеклом стоял он.", "Лиц у него стало на одно больше."]},
   {img:"p30",t:["Утром я стоял за стойкой. В фартуке.","Продавщицы больше не было."]},
@@ -190,13 +191,15 @@ function cues(){
   var d=vo.duration||120,len=SEG.map(function(s){return s.t.join(" ").length+40}),tot=len.reduce(function(a,b){return a+b},0),acc=0;
   return len.map(function(l){var a=acc/tot*d;acc+=l;return a});
 }
-function frame(img,dark){
+function frame(img,dark,fx){
   black.classList.add("on");
   setTimeout(function(){
     shot.innerHTML="";shot.classList.toggle("dark",!!dark);black.classList.remove("on");if(!img)return;
     var bg=new Image(),el=new Image();bg.src=el.src="../img/"+img+".jpg";bg.alt=el.alt="";bg.className="bg";el.className="fg";
     var up=Math.random()<.5;
     el.style.setProperty("--y0",up?"85%":"15%");el.style.setProperty("--y1",up?"15%":"85%");el.style.setProperty("--o",up?"25%":"70%");el.style.setProperty("--dur","14s");
+    // keep the subject in shot on a narrow screen
+    if(fx){el.style.setProperty("--x0",fx);el.style.setProperty("--x1",fx);el.style.setProperty("--fx",fx)}
     shot.appendChild(bg);shot.appendChild(el);
     requestAnimationFrame(function(){requestAnimationFrame(function(){bg.classList.add("on");el.classList.add("on")})});
   },300);
@@ -212,7 +215,7 @@ function tick(){
     var prev=SEG[cur];cur=i;curLine=-1;
     // the dark signpost followed by the same frame: the flash fires instead of a cut
     if(prev&&prev.img===SEG[i].img&&prev.dark&&!SEG[i].dark){shot.classList.remove("dark");flashEl.classList.remove("go");void flashEl.offsetWidth;flashEl.classList.add("go")}
-    else frame(SEG[i].img,SEG[i].dark);$("scn").innerHTML='<span class="rec"></span>кадр '+("0"+(i+1)).slice(-2)+' / '+SEG.length;
+    else frame(SEG[i].img,SEG[i].dark,SEG[i].fx);$("scn").innerHTML='<span class="rec"></span>кадр '+("0"+(i+1)).slice(-2)+' / '+SEG.length;
     if(SEG[i].burn){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
   // which sentence inside the segment, from the short pauses in the voice
   var lines=SEG[i].t,at=LINES[i],j=0;
