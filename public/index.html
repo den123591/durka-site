@@ -6,8 +6,8 @@
 <title>Дурка</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&family=PT+Sans:wght@400;700&display=swap">
 <style>
-/* Layout: a found film that plays full screen. Each scene is one frame the camera slowly crawls over, subtitles tell the story,
-   and at a fork the film freezes and asks you what to do, with a timer like Bandersnatch */
+/* Layout: a found film that plays full screen with a narrator. Frames change in sync with the voice, the camera slowly crawls
+   over each one, subtitles at the bottom, credits at the end */
 :root{
   --night:#050505; --ash:#8f8a82; --bone:#ece6da; --stamp:#ff7a1a; --ember:#ff4d00;
   --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace; --sans:"PT Sans",Arial,sans-serif;
@@ -93,7 +93,7 @@ body.frozen #shot{animation-play-state:paused}
 #card h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
 #card h1 .a{display:inline-block;transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
 #card h2{margin:10px 0 0;font:300 italic clamp(54px,10vw,140px)/.9 var(--serif);letter-spacing:-.03em}
-#card p{margin:22px auto 0;max-width:38ch;font:italic 300 clamp(19px,2.2vw,24px)/1.35 var(--serif);color:var(--ash)}
+#card p{margin:40px auto 0;max-width:38ch;font:italic 300 clamp(19px,2.2vw,24px)/1.35 var(--serif);color:var(--ash)}
 #card .tag{color:var(--stamp)}
 .play{margin-top:34px;background:none;border:1px solid var(--bone);padding:16px 26px;cursor:pointer;font:15px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .play:hover,.play:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
@@ -130,6 +130,12 @@ body.frozen #shot{animation-play-state:paused}
   .credits dl{font-size:12px}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition:none!important}}
+#prog{position:absolute;z-index:6;left:0;right:0;bottom:var(--bar);height:2px;background:rgba(255,255,255,.08)}
+#prog i{display:block;height:100%;width:100%;background:var(--stamp);transform-origin:left;transform:scaleX(0)}
+#pp{background:none;border:0;padding:6px 0;cursor:pointer}
+body.paused #shot img.fg,body.paused #shot{animation-play-state:paused}
+body.paused #subs span{opacity:.35}
+.credits.long{height:58vh}.credits.long div{padding-top:58vh;animation-duration:30s}
 </style>
 </head>
 <body>
@@ -139,262 +145,122 @@ body.frozen #shot{animation-play-state:paused}
   <div class="vig" aria-hidden="true"></div>
   <div class="scratch" aria-hidden="true"></div><div class="scratch b" aria-hidden="true"></div>
   <div class="lb t"></div><div class="lb b"></div>
-  <div class="hud t mono"><span id="scn"><span class="rec"></span>плёнка №3</span><button id="snd" class="mono" type="button" aria-pressed="false">звук: выкл</button></div>
-  <div class="hud b mono"><span>концовок <b id="cntE">0</b>/5</span><span id="tc">00:00:00:00</span></div>
+  <div class="hud t mono"><span id="scn"><span class="rec"></span>плёнка №3</span><span>голос за кадром</span></div>
+  <div class="hud b mono"><button id="pp" class="mono" type="button">❚❚ пауза</button><span id="tc">00:00:00:00</span></div>
   <div id="subs"><span></span></div>
-  <span class="tap mono" id="tap" hidden>тап — дальше</span>
-  <div id="fork"><div class="q">Что делать?</div><div class="opts"></div><div class="timer"><i></i></div></div>
+  <div id="prog"><i></i></div>
   <div id="black"></div>
   <div id="burn"></div>
   <div id="card"></div>
 </div>
 <canvas id="grain" width="320" height="320" aria-hidden="true"></canvas>
-<div id="scare" aria-hidden="true" hidden></div>
+<audio id="vo" src="vo.mp3" preload="auto"></audio>
 
 <script>
-/* ---------- story ---------- */
-// img: frame, t: subtitles ("~" crossed out, "!" red, "@time" the viewer's clock), q: question at the fork, go: [label, scene], end: ending title
-var S={
-  n1:{t:[
-    "Если вы это смотрите, значит, я так и не вернулся с заправки.",
-    "@time",
-    "Плёнку нашли у трассы. Тут всё по порядку.",
-    "!И не смотрите на коня."],
-    q:"С чего начать?",go:[["смотреть по порядку","road"],["перемотать на коня","horse"]]},
+/* ---------- film ---------- */
+// one segment per frame; at: when it starts in vo.mp3 (seconds), measured from the pauses in the voice
+var SEG=[
+  {img:null,at:0,t:["Эту плёнку нашли у трассы 27 октября.","Кто снимал, неизвестно.","На всех кадрах одно лицо.","Моё."]},
+  {img:"p0",t:["Навигатор третий раз сказал: «Через двести метров поверните».","Поворота не было. Был указатель.","И на нём кто-то сидел."]},
+  {img:"p7",t:["Я включил вспышку.","Лиц у него было много. Одно из них было моё.","Оно мне подмигнуло."]},
+  {img:"p1",t:["Он показал в поле. Там паслась лошадь.","Голова у неё была не лошадиная.","Она сказала: «рррр».","Я сделал вид, что не слышал."]},
+  {img:"p10",t:["На заправке колонку держал конь с чёлкой.","«Бензина нет, — сказал он. — Есть люстра».","Я не стал спорить с конём."]},
+  {img:"p11",t:["Посреди поля стояла бочка, а над ней душ.","Горячую воду отключили в 2003-м.","А тут была. Я залез."]},
+  {img:"p2",t:["Вдалеке загорелся дом.","Перед ним лежал белый конь и смотрел в другую сторону."]},
+  {img:"p5",t:["Я посмотрел туда же. Там стояла моя семья.","Нас было шестеро. У всех было моё лицо.","«Ты опоздал на ужин», — сказали они."]},
+  {img:"p13",t:["Ужин готовил повар в фартуке.","Он сказал: «Через пять минут».","Он не сказал, кто ужин."]},
+  {img:"p12",t:["Я вылез в окно. Мимо проходила такса.","Проходила минут сорок.","На ней сидели парни с моим лицом.","Свободного места не было."]},
+  {img:"p6",t:["Я побежал в лес. Из травы рос палец.","Он рос там всегда.","Мы просто не смотрели вниз."]},
+  {img:"p4",t:["Палец показывал на гномов.","Гномы спасали лес.","Лес не просил."]},
+  {img:"p14",t:["Проснулся я в переноске. Её нёс медведь.","Я давно вырос.","Он считает, что я ещё маленький."]},
+  {img:"p3",t:["Медведь постучал в первую дверь. Открыл единорог.","«С Новым годом», — сказал он.","На дворе был октябрь."]},
+  {img:"p9",t:["Утром мы вышли к морю. Море было спокойным.","Под водой было лицо.","Оно смотрело на меня."]},
+  {img:"p8",t:["Последний кадр снят изнутри.","Если вы это смотрите, значит, он уже знает, где вы живёте.","Не выключайте свет."]}
+];
+var LINES=[[0, 3.35, 5.31, 7.92], [10.2, 14.59, 17.35], [20.36, 21.84, 26.46], [29.26, 32.17, 34.87, 37.05], [40.14, 43.03, 46.23], [49.18, 52.58, 55.43], [59.18, 60.9], [65.9, 69.32, 73.11], [77.08, 79.23, 82.02], [85.09, 88.09, 89.73, 92.14], [95.34, 98.6, 100.0], [103.34, 105.16, 107.78], [110.3, 113.48, 114.8], [118.1, 121.9, 124.13], [127.0, 130.32, 132.82], [135.62, 137.73, 142.51]]; // when each subtitle line starts, from the short pauses
+var CUES=[0, 9.8, 19.96, 28.86, 39.74, 48.78, 58.78, 65.5, 76.68, 84.69, 94.94, 102.94, 109.9, 117.7, 126.6, 135.22]; // start of each segment in vo.mp3, taken from the long pauses in the voice
 
-  horse:{img:"p10",scare:1,t:[
-    "Вы перемотали на коня.",
-    "!Я же просил.",
-    "Раз вы его видели, он вас тоже видел.",
-    "Ладно. Дальше смотрите с заправки."],
-    q:"",go:[["смотреть дальше","station"]]},
-
-  road:{img:"p0",t:[
-    "Навигатор третий раз сказал: «Через двести метров поверните».",
-    "Поворота не было. Был указатель.",
-    "На указателе кто-то сидел и смотрел, как я еду."],
-    q:"Что делать?",go:[["включить вспышку","sign"],["не останавливаться","station"]]},
-
-  sign:{img:"p7",t:[
-    "Со вспышкой я увидел, что лиц у него много.",
-    "Одно из них было моё. Оно мне подмигнуло.",
-    "Он молча показал в поле."],
-    q:"Куда?",go:[["пойти, куда показали","field"],["газануть до заправки","station"]]},
-
-  station:{img:"p10",t:[
-    "Я приехал заправиться. Но была одна проблема.",
-    "Колонку держал конь с чёлкой.",
-    "«Бензина нет, — сказал он. — Есть люстра».",
-    "~Я взял люстру.",
-    "Я ничего не взял."],
-    q:"Что дальше?",go:[["спросить, где переночевать","kitchen"],["уйти пешком через поле","barrel"]]},
-
-  field:{img:"p1",t:[
-    "В поле паслась лошадь. Голова у неё была не лошадиная.",
-    "Она сказала «рррр».",
-    "Я сделал вид, что не слышал, и начал медленно пятиться."],
-    q:"Бежать куда?",go:[["к огонькам","barrel"],["в лес","forest"]]},
-
-  barrel:{img:"p11",t:[
-    "Посреди поля стояла бочка, а над ней душ.",
-    "Горячую воду отключили в 2003-м. А тут была.",
-    "Я залез. Вдалеке что-то загорелось, но вода была такая тёплая."],
-    q:"Что делать?",go:[["вылезти и пойти на огонь","fire"],["сидеть, пока не остынет","taxa"]]},
-
-  taxa:{img:"p12",t:[
-    "Мимо проходила такса. Проходила минут сорок.",
-    "На ней сидели парни. У всех было моё лицо.",
-    "В самом конце было одно свободное место."],
-    q:"Садиться?",go:[["сесть","E_taxa"],["не садиться","fire"]]},
-
-  fire:{img:"p2",t:[
-    "Горел дом. Перед ним лежал белый конь.",
-    "Конь смотрел в другую сторону.",
-    "На боку у коня было лицо. Догадайтесь чьё."],
-    q:"Что делать?",go:[["посмотреть, куда смотрит конь","family"],["убежать в лес","forest"]]},
-
-  family:{img:"p5",t:[
-    "Там стояла моя семья. Нас было шестеро.",
-    "У всех было моё лицо.",
-    "!«Ты опоздал на ужин», — сказали они хором."],
-    q:"Что ответить?",go:[["остаться с ними","E_family"],["сказать, что ты не он","kitchen"]]},
-
-  kitchen:{img:"p13",t:[
-    "Меня отвели в дом и посадили за стол.",
-    "Повар в фартуке сказал, что ужин будет через пять минут.",
-    "Он не сказал, кто ужин."],
-    q:"Что делать?",go:[["взять вилку и ждать","E_dinner"],["вылезти в окно","forest"]]},
-
-  forest:{img:"p6",t:[
-    "В лесу я обнял ёлку, чтобы отдышаться.",
-    "Из травы рос палец.",
-    "Он рос там всегда. Мы просто не смотрели вниз."],
-    q:"Что делать?",go:[["идти, куда указывает палец","gnomes"],["лечь и уснуть","bear"]]},
-
-  gnomes:{img:"p4",t:[
-    "Палец указывал на гномов. Гномы спасали лес.",
-    "Лес не просил. Горело только там, где были гномы.",
-    "Мне дали ведро."],
-    q:"Что делать?",go:[["помогать гномам","bear"],["бросить ведро и бежать","bear"]]},
-
-  bear:{img:"p14",t:[
-    "Проснулся я в переноске. Переноску нёс медведь.",
-    "Я давно вырос. Он считает, что я ещё маленький.",
-    "Мы идём к морю. Я слышу волны."],
-    q:"Что делать?",go:[["не сопротивляться","E_sea"],["вырваться и стучать в первую дверь","E_unicorn"]]},
-
-  // endings
-  E_taxa:{end:"Очередь",img:"p12",t:"Вы сели последним. Утром у трассы нашли ещё одну плёнку."},
-  E_family:{end:"Семья",img:"p5",t:"Теперь нас семеро. Ужин всё ещё горячий."},
-  E_dinner:{end:"Ужин",img:"p13",t:"Через пять минут на кухне стало тихо. Повар вытер руки о фартук."},
-  E_unicorn:{end:"Новый год",img:"p3",t:"Дверь открыл единорог. «С Новым годом», — сказал он. На дворе октябрь. Я остался."},
-  E_sea:{end:"Море",img:"p9",t:"Море было спокойным. Под водой было лицо. Я положил плёнку в коробку и отпустил её по воде. Если вы это смотрите…"},
-  E_secret:{end:"Вырезанная сцена",img:"p8",secret:1,t:"Этот кадр снят изнутри. Вы посмотрели все концовки. Теперь он знает, где вы живёте."}
-};
-var ENDS=["E_taxa","E_family","E_dinner","E_unicorn","E_sea"];
-var ORDER=["n1","horse","road","sign","station","field","barrel","taxa","fire","family","kitchen","forest","gnomes","bear"];
-
-/* ---------- per-viewer progress ---------- */
-function load(k){try{return JSON.parse(localStorage.getItem(k)||"[]")}catch(e){return []}}
-function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-var seenE=load("durka-ends");
-function found(){return seenE.filter(function(e){return ENDS.indexOf(e)>=0}).length}
-function counts(){document.getElementById("cntE").textContent=found()}
-
-/* ---------- player ---------- */
 var $=function(id){return document.getElementById(id)};
-var shot=$("shot"),subs=$("subs").firstChild,fork=$("fork"),card=$("card"),black=$("black"),burnEl=$("burn"),tapHint=$("tap");
-var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-var skip=null,run=0;
+var vo=$("vo"),shot=$("shot"),subs=$("subs").firstChild,card=$("card"),black=$("black"),burnEl=$("burn"),bar=$("prog").firstChild;
+var cur=-1,curLine=-1,raf=0,ended=false;
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function wait(ms,skippable){return new Promise(function(r){var t=setTimeout(done,ms);if(skippable)skip=done;function done(){clearTimeout(t);if(skip===done)skip=null;r()}})}
-function shutter(loud){window.durkaShutter&&window.durkaShutter(loud)}
 
+// fallback when no cues: spread segments over the track by text length
+function cues(){
+  if(CUES)return CUES;
+  var d=vo.duration||120,len=SEG.map(function(s){return s.t.join(" ").length+40}),tot=len.reduce(function(a,b){return a+b},0),acc=0;
+  return len.map(function(l){var a=acc/tot*d;acc+=l;return a});
+}
 function frame(img){
-  shot.innerHTML="";if(!img)return;
-  var bg=new Image(),el=new Image();bg.src=el.src="img/"+img+".jpg";bg.alt=el.alt="";bg.className="bg";el.className="fg";
-  var up=Math.random()<.5;
-  el.style.setProperty("--y0",up?"85%":"15%");el.style.setProperty("--y1",up?"15%":"85%");el.style.setProperty("--o",up?"25%":"70%");
-  shot.appendChild(bg);shot.appendChild(el);
-  requestAnimationFrame(function(){requestAnimationFrame(function(){bg.classList.add("on");el.classList.add("on")})});
+  black.classList.add("on");
+  setTimeout(function(){
+    shot.innerHTML="";black.classList.remove("on");if(!img)return;
+    var bg=new Image(),el=new Image();bg.src=el.src="img/"+img+".jpg";bg.alt=el.alt="";bg.className="bg";el.className="fg";
+    var up=Math.random()<.5;
+    el.style.setProperty("--y0",up?"85%":"15%");el.style.setProperty("--y1",up?"15%":"85%");el.style.setProperty("--o",up?"25%":"70%");el.style.setProperty("--dur","14s");
+    shot.appendChild(bg);shot.appendChild(el);
+    requestAnimationFrame(function(){requestAnimationFrame(function(){bg.classList.add("on");el.classList.add("on")})});
+  },300);
 }
-function timeLine(){
-  var d=new Date(),h=d.getHours(),m=("0"+d.getMinutes()).slice(-2);
-  return "Сейчас "+h+":"+m+". "+(h>=22||h<5?"Поздновато. Вы смотрите это один?":"Вы смотрите это один?");
+function line(txt){
+  subs.className="";
+  setTimeout(function(){subs.textContent=txt;subs.className=txt?"on":""},180);
 }
-async function say(line,my){
-  var cls="";if(line[0]=="~"){cls="cross";line=line.slice(1)}else if(line[0]=="!"){cls="red";line=line.slice(1)}
-  if(line=="@time")line=timeLine();
-  subs.className="";subs.textContent=line;void subs.offsetWidth;subs.className="on "+cls;
-  if(cls=="red"){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go");shutter(true)}
-  await wait(Math.max(2600,line.length*62)+(cls=="cross"?400:0),true);
-  if(my!==run)return;
-  subs.className="";await wait(250);
-}
-async function cut(){black.classList.add("on");await wait(380)}
-function uncut(){black.classList.remove("on")}
-
-async function play(id){
-  var my=++run,s=S[id];
-  fork.classList.remove("on","chosen");document.body.classList.remove("frozen");
-  if(s.end)return ending(id,my);
-  await cut();if(my!==run)return;
-  card.classList.remove("on");document.body.classList.remove("open");
-  frame(s.img);
-  var n=ORDER.indexOf(id);
-  $("scn").innerHTML='<span class="rec"></span>сцена '+("0"+(n+1)).slice(-2);
-  uncut();
-  if(s.scare)scare(1600);
-  await wait(s.img?900:400);
-  tapHint.hidden=false;
-  for(var i=0;i<s.t.length;i++){if(my!==run)return;await say(s.t[i],my)}
-  tapHint.hidden=true;
-  if(my!==run)return;
-  var next=await choose(s,my);
-  if(my===run&&next)play(next);
-}
-function choose(s,my){
-  return new Promise(function(res){
-    document.body.classList.add("frozen");shutter(false);
-    fork.querySelector(".q").textContent=s.q||"";
-    var opts=fork.querySelector(".opts");
-    opts.style.gridTemplateColumns=s.go.length<2?"minmax(0,1fr)":"";
-    opts.innerHTML=s.go.map(function(g,i){return '<button type="button" data-i="'+i+'">'+esc(g[0])+'</button>'}).join("");
-    var secs=s.go.length<2?6:10;fork.style.setProperty("--t",secs+"s");
-    var bar=fork.querySelector(".timer i");bar.style.animation="none";void bar.offsetWidth;bar.style.animation="";
-    fork.classList.add("on");
-    var done=false,timer=setTimeout(function(){pick(0,true)},secs*1000);
-    function pick(i,auto){
-      if(done||my!==run)return;done=true;clearTimeout(timer);fork.classList.add("chosen");
-      opts.querySelectorAll("button").forEach(function(b,j){b.classList.add(j===i?"pick":"nope")});
-      shutter(true);
-      setTimeout(function(){
-        fork.classList.remove("on");
-        if(auto&&s.go.length>1){subs.textContent="Вы промолчали. Мы выбрали за вас.";subs.className="on red";setTimeout(function(){subs.className="";res(s.go[i][1])},1800)}
-        else res(s.go[i][1]);
-      },700);
-    }
-    opts.onclick=function(e){var b=e.target.closest("button");if(b){e.stopPropagation();pick(+b.getAttribute("data-i"))}};
-    var first=opts.querySelector("button");first&&first.focus({preventScroll:true});
-  });
+function tick(){
+  var t=vo.currentTime,c=cues(),i=0;
+  while(i+1<c.length&&t>=c[i+1])i++;
+  if(i!==cur){cur=i;curLine=-1;frame(SEG[i].img);$("scn").innerHTML='<span class="rec"></span>кадр '+("0"+(i+1)).slice(-2)+' / '+SEG.length;
+    if(i===SEG.length-1){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
+  // which sentence inside the segment, from the short pauses in the voice
+  var lines=SEG[i].t,at=LINES[i],j=0;
+  while(j+1<lines.length&&t>=at[j+1])j++;
+  if(j!==curLine){curLine=j;line(lines[j])}
+  bar.style.transform="scaleX("+(vo.duration?t/vo.duration:0)+")";
+  var sec=Math.floor(t),f=Math.floor(t*24)%24;
+  $("tc").textContent=["00",("0"+Math.floor(sec/60)).slice(-2),("0"+sec%60).slice(-2),("0"+f).slice(-2)].join(":");
+  if(!vo.paused)raf=requestAnimationFrame(tick);
 }
 var CREDITS=[["В ролях",""],["Он","Д."],["Он же на указателе","Д."],["Семья","Д. Д. Д. Д. Д."],["Очередь на таксе","Д. ×14"],["Конь с чёлкой","играл сам себя"],
   ["Лошадь в поле","рррр"],["Повар","лев (имя скрыто)"],["Медведь","каскадёр"],["Гномы","спасатели"],["Единорог","в гостях"],["Лицо в море","Д."],
-  ["Съёмочная группа",""],["Оператор","неизвестен"],["Свет","люстра"],["Звук","конь"],["Монтаж","никто не помнит"]]
+  ["Съёмочная группа",""],["Оператор","неизвестен"],["Свет","люстра"],["Голос","тот, кто внутри"],["Монтаж","никто не помнит"]]
   .map(function(r){return r[1]?'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>':'<span class="h">'+r[0]+'</span>'}).join("")+
   '<span class="h">Плёнка найдена у трассы 27.10</span><span class="h">Никто не пострадал. Наверное.</span>';
-async function ending(id,my){
-  var s=S[id],n=ENDS.indexOf(id);
-  if(seenE.indexOf(id)<0){seenE.push(id);save("durka-ends",seenE)}counts();
-  await cut();if(my!==run)return;
-  frame(s.img);uncut();document.body.classList.remove("open");
-  $("scn").innerHTML='<span class="rec"></span>конец';
-  await wait(900);await say(s.t,my);if(my!==run)return;
-  await wait(600);
-  card.innerHTML='<div><div class="mono tag">'+(s.secret?"вырезанная сцена":"концовка "+(n+1)+" из 5")+'</div><h2>'+esc(s.end)+'</h2>'+
-    '<div class="credits"><div><dl>'+CREDITS+'</dl></div></div>'+
-    '<div class="acts"><button class="play" type="button" data-go="intro">смотреть заново</button></div>'+
+function finale(){
+  ended=true;cancelAnimationFrame(raf);line("");
+  card.innerHTML='<div><div class="mono tag">конец плёнки</div><h2>Дурка</h2>'+
+    '<div class="credits long"><div><dl>'+CREDITS+'</dl></div></div>'+
+    '<div class="acts"><button class="play" type="button" data-go="again">смотреть ещё раз</button></div>'+
     '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й зритель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div>';
-  card.classList.add("on");witness();
+  setTimeout(function(){card.classList.add("on");witness()},1500);
 }
+function start(){
+  ended=false;cur=-1;card.classList.remove("on");document.body.classList.remove("open","paused");
+  vo.currentTime=0;var pr=vo.play();if(pr&&pr.catch)pr.catch(function(){});
+  window.durkaHum&&window.durkaHum(true);
+  cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
+}
+function togglePause(){
+  if(ended||document.body.classList.contains("open"))return;
+  if(vo.paused){vo.play();document.body.classList.remove("paused");$("pp").textContent="❚❚ пауза";raf=requestAnimationFrame(tick)}
+  else{vo.pause();document.body.classList.add("paused");$("pp").textContent="▶ дальше"}
+}
+vo.addEventListener("ended",finale);
+$("pp").addEventListener("click",function(e){e.stopPropagation();togglePause()});
+$("screen").addEventListener("click",function(e){if(!e.target.closest("#card,button"))togglePause()});
+addEventListener("keydown",function(e){if(e.key===" "&&!e.target.closest("button")){e.preventDefault();togglePause()}});
+card.addEventListener("click",function(e){var b=e.target.closest("[data-go]");if(!b)return;e.stopPropagation();start()});
+document.addEventListener("visibilitychange",function(){if(document.hidden&&!vo.paused)togglePause()});
 
 function intro(){
-  run++;skip=null;document.body.classList.add("open");document.body.classList.remove("frozen");fork.classList.remove("on");subs.className="";tapHint.hidden=true;
-  frame(null);$("scn").innerHTML='<span class="rec"></span>плёнка №3';
-  var all=found()===ENDS.length;
+  document.body.classList.add("open");
   card.innerHTML='<div><h1 aria-label="дурка">д<span class="k">у</span>рк<span class="a">а</span></h1>'+
-    '<p>Плёнку нашли у трассы 27 октября. 14 сцен, 5 концовок. Выбирать придётся быстро.</p>'+
-    '<div class="acts"><button class="play" type="button" data-go="n1">▶ смотреть</button>'+
-    (all?'<button class="play ghost" type="button" data-go="E_secret">вырезанная сцена</button>':'')+
-    '<span class="mono" style="margin-top:22px">'+(seenE.length?"вы уже смотрели. он запомнил":"лучше со звуком и в темноте")+'</span></div></div>';
-  card.classList.add("on");counts();
+    '<p>Плёнку нашли у трассы 27 октября. Две минуты. Смотреть со звуком и в темноте.</p>'+
+    '<div class="acts"><button class="play" type="button" data-go="start">▶ смотреть</button></div></div>';
+  card.classList.add("on");
 }
-card.addEventListener("click",function(e){
-  var b=e.target.closest("[data-go]");if(!b)return;e.stopPropagation();
-  var g=b.getAttribute("data-go");
-  if(g==="intro"){card.classList.remove("on");setTimeout(intro,500);return}
-  window.durkaSound&&window.durkaSound(true);
-  play(g);
-});
-$("screen").addEventListener("click",function(e){
-  if(e.target.closest("#snd,#fork,#card"))return;
-  if(skip)skip();
-});
-addEventListener("keydown",function(e){if((e.key===" "||e.key==="Enter")&&skip&&!e.target.closest("button")){e.preventDefault();skip()}});
 intro();
 
-/* ---------- timecode ---------- */
-var t0=Date.now();
-setInterval(function(){if(document.body.classList.contains("frozen"))return;var ms=Date.now()-t0,f=Math.floor(ms/41.6)%24,sec=Math.floor(ms/1000);
-  $("tc").textContent=[Math.floor(sec/3600),Math.floor(sec/60)%60,sec%60,f].map(function(v){return("0"+v).slice(-2)}).join(":")},42);
-
-/* ---------- screamer (only when you rewind to the horse) ---------- */
-function scare(after){
-  if(reduce)return;
-  setTimeout(function(){var sc=$("scare");sc.hidden=false;shutter(true);setTimeout(function(){sc.hidden=true},140)},after);
-}
-
-/* ---------- viewer counter on endings ---------- */
+/* ---------- viewer counter ---------- */
 function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 var offline={visit:666,seen:0};
@@ -406,7 +272,7 @@ function witness(){
   api(firstVisit?"POST":"GET",firstVisit?"visit":"").then(function(d){put("durka-visit","1");fill(d)}).catch(function(){fill(offline)});
   if(get("durka-seen"))sb.disabled=true;
   sb.addEventListener("click",function(e){
-    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");shutter(false);
+    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");
     api("POST","seen").then(fill).catch(function(){offline.seen++;fill(offline)});
   });
 }
@@ -429,26 +295,23 @@ document.addEventListener("visibilitychange",function(){
   }
   requestAnimationFrame(grain);
 
-  // sound: projector clatter and a low hum, shutter clicks at the forks
-  var ac=null,on=false,btn=document.getElementById("snd");
+  // under the voice: a low hum and the projector clattering, quiet
+  var ac=null;
   function noise(sec){var b=ac.createBuffer(1,ac.sampleRate*sec|0,ac.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
   function burst(t,dur,freq,vol){var s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=noise(dur);f.type="highpass";f.frequency.value=freq;
     g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f).connect(g).connect(ac.destination);s.start(t)}
-  window.durkaShutter=function(loud){if(!on)return;var t=ac.currentTime;burst(t,.05,1800,loud?.9:.5);burst(t+.07,.09,900,loud?.7:.35);if(loud)burst(t+.02,.5,200,.6)};
-  function startAmb(){
-    var g=ac.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.05,ac.currentTime+3);g.connect(ac.destination);
-    [41,55.3,82.4].forEach(function(f,i){var o=ac.createOscillator();o.frequency.value=f;var og=ac.createGain();og.gain.value=[1,.7,.25][i];o.connect(og).connect(g);o.start()});
-    setInterval(function(){if(on&&!document.body.classList.contains("frozen")&&!document.body.classList.contains("open"))burst(ac.currentTime,.012,2600,.025+Math.random()*.02)},42);
-  }
-  function setSound(v){
+  window.durkaHum=function(){
     try{
-      if(v&&!ac){ac=new (window.AudioContext||window.webkitAudioContext)();startAmb()}
-      if(ac){v?ac.resume():ac.suspend()}
-      on=v;btn.setAttribute("aria-pressed",v?"true":"false");btn.textContent=v?"звук: вкл":"звук: выкл";
+      if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
+        var g=ac.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.035,ac.currentTime+3);g.connect(ac.destination);
+        [41,55.3,82.4].forEach(function(f,i){var o=ac.createOscillator();o.frequency.value=f;var og=ac.createGain();og.gain.value=[1,.7,.25][i];o.connect(og).connect(g);o.start()});
+        setInterval(function(){var b=document.body.classList;if(!b.contains("paused")&&!b.contains("open"))burst(ac.currentTime,.012,2600,.015+Math.random()*.015)},42);
+      }
+      ac.resume();
     }catch(e){}
-  }
-  window.durkaSound=function(v){if(!on&&v&&!btn.dataset.off)setSound(true)};
-  btn.addEventListener("click",function(e){e.stopPropagation();if(on)btn.dataset.off="1";else delete btn.dataset.off;setSound(!on)});
+  };
+  document.getElementById("vo").addEventListener("pause",function(){ac&&ac.suspend()});
+  document.getElementById("vo").addEventListener("play",function(){ac&&ac.resume()});
 })();
 </script>
 </body>
