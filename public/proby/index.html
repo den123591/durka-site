@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Дурка: Пробы</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=PT+Mono&family=PT+Sans:wght@400;700&display=swap">
+<style>
+/* Layout: a found film that plays full screen with a narrator. Frames change in sync with the voice, the camera slowly crawls
+   over each one, subtitles at the bottom, credits at the end */
+:root{
+  --night:#050505; --ash:#8f8a82; --bone:#ece6da; --stamp:#ff7a1a; --ember:#ff4d00;
+  --serif:"Cormorant Garamond","Times New Roman",serif; --mono:"PT Mono","Courier New",monospace; --sans:"PT Sans",Arial,sans-serif;
+  --bar:clamp(28px,9vh,90px);
+  color-scheme:dark;
+}
+html,body{margin:0;height:100%}
+html{background:var(--night)}
+body{background:var(--night);color:var(--bone);font-family:var(--serif);overflow:hidden;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit}
+.mono{font:12px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ash)}
+
+#screen{position:fixed;inset:0;overflow:hidden;background:#000;cursor:default}
+
+/* the frame: camera crawls across the photo while the projector shakes it a little */
+#shot{position:absolute;inset:0;animation:jitter .25s steps(2) infinite}
+#shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;
+  filter:brightness(.82) contrast(1.12) saturate(.85) sepia(.12);animation:kb var(--dur,40s) cubic-bezier(.25,.1,.4,1) both,flick 5s steps(1) infinite}
+#shot img.on{opacity:1}
+/* the same frame before the flash fires: only a faint outline in the dark */
+#shot.dark::after{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 50% 35%,rgba(0,4,16,.55),rgba(0,0,0,.9) 75%)}
+/* wide screens: the whole portrait frame in the middle, its own blurred glow fills the sides */
+#shot img.bg{animation:none;filter:blur(30px) brightness(.32) saturate(.7);transform:scale(1.2)}
+#shot img.bg.on{opacity:1}
+@media (min-aspect-ratio:1/1){
+  #shot img.fg{object-fit:contain;transform-origin:50% var(--o,30%);animation-name:kbw,flick}
+}
+@keyframes kbw{from{transform:scale(1)}to{transform:scale(1.14)}}
+@keyframes kb{from{object-position:var(--x0,50%) var(--y0,20%);transform:scale(1.04)}to{object-position:var(--x1,50%) var(--y1,80%);transform:scale(1.2)}}
+@keyframes jitter{0%{transform:translate(0,0)}50%{transform:translate(.6px,-.8px)}}
+@keyframes flick{0%,100%{filter:brightness(.82) contrast(1.12) saturate(.85) sepia(.12)}43%{filter:brightness(.7) contrast(1.15) saturate(.85) sepia(.12)}44%{filter:brightness(1.05) contrast(1.1) saturate(.9) sepia(.1)}46%{filter:brightness(.8) contrast(1.12) saturate(.85) sepia(.12)}}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,.75) 100%)}
+.scratch{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.18);pointer-events:none;opacity:0;animation:scr 7s linear infinite}
+.scratch.b{animation-duration:11s;animation-delay:3s;background:rgba(0,0,0,.4);width:2px}
+@keyframes scr{0%{left:20%;opacity:0}3%{opacity:1}9%{left:23%;opacity:.6}11%{opacity:0}50%{left:71%;opacity:0}52%{opacity:.8}57%{left:69%;opacity:0}100%{left:69%;opacity:0}}
+
+/* letterbox */
+.lb{position:absolute;left:0;right:0;height:var(--bar);background:#000;z-index:5;transition:height 1.2s cubic-bezier(.6,0,.3,1)}
+.lb.t{top:0}.lb.b{bottom:0}
+body.open .lb{height:0}
+
+/* hud inside the bars */
+.hud{position:absolute;z-index:6;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.hud.t{top:0;height:var(--bar);padding-top:env(safe-area-inset-top,0px)}
+.hud.b{bottom:0;height:var(--bar)}
+.hud b{color:var(--stamp);font-weight:400}
+#snd{background:none;border:0;padding:6px 0;cursor:pointer}
+#snd[aria-pressed="true"]{color:var(--stamp)}
+.rec{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ember);margin-right:8px;vertical-align:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* subtitles */
+#subs{position:absolute;z-index:7;left:0;right:0;bottom:calc(var(--bar) + 4vh);display:flex;justify-content:center;padding-inline:20px;pointer-events:none}
+#subs span{max-width:min(900px,92vw);text-align:center;font:400 clamp(19px,2.3vw,30px)/1.3 var(--sans);color:#fff;
+  text-shadow:0 0 2px #000,0 0 2px #000,0 2px 6px #000,0 0 20px rgba(0,0,0,.8);opacity:0;transition:opacity .25s ease}
+#subs span.on{opacity:1}
+#subs span.red{color:#ff5a3a;animation:glitch 2.4s steps(1) infinite}
+#subs span.cross{text-decoration:line-through;text-decoration-thickness:3px;color:#cfc8bd}
+@keyframes glitch{0%,80%,100%{transform:none}82%{transform:translateX(-4px) skewX(-10deg)}84%{transform:translateX(5px)}86%{transform:none}}
+.tap{position:absolute;z-index:7;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--bar) + 10px);opacity:.5}
+
+/* fork: the film freezes, two choices, a draining timer */
+#fork{position:absolute;z-index:8;left:0;right:0;bottom:calc(var(--bar) + 3vh);display:none;flex-direction:column;align-items:center;gap:18px;padding-inline:16px}
+#fork.on{display:flex;animation:fadein .5s both}
+#fork .q{font:italic 300 clamp(22px,2.6vw,32px)/1.1 var(--serif);color:var(--bone);text-shadow:0 2px 10px #000}
+#fork .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(760px,100%)}
+#fork button{background:rgba(5,5,5,.72);border:1px solid rgba(236,230,218,.35);padding:18px 14px;cursor:pointer;
+  font:700 clamp(14px,1.6vw,18px)/1.25 var(--sans);letter-spacing:.02em;text-transform:uppercase;transition:background .2s,border-color .2s,color .2s;
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#fork button:hover,#fork button:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
+#fork button.pick{background:var(--bone);color:#000;border-color:var(--bone)}
+#fork button.nope{opacity:.25}
+#fork .timer{width:min(760px,100%);height:3px;background:rgba(255,255,255,.15)}
+#fork .timer i{display:block;height:100%;background:var(--bone);transform-origin:left;animation:drain var(--t,10s) linear both}
+#fork.chosen .timer i{animation-play-state:paused}
+@keyframes drain{to{transform:scaleX(0)}}
+body.frozen #shot img.fg{animation-play-state:paused;filter:brightness(.55) contrast(1.2) saturate(.6) sepia(.2)}
+body.frozen #shot{animation-play-state:paused}
+
+/* title cards: opening and ending */
+#card{position:absolute;inset:0;z-index:9;display:grid;place-items:center;text-align:center;padding:24px;background:#000;opacity:0;pointer-events:none;transition:opacity .6s ease}
+#card.on{opacity:1;pointer-events:auto}
+#card h1{margin:0;font:300 italic clamp(96px,22vw,320px)/.8 var(--serif);letter-spacing:-.06em}
+#card h1 .k{color:transparent;-webkit-text-stroke:1px var(--bone)}
+#card h1 .a{display:inline-block;transform:translateY(.12em) rotate(4deg);color:var(--ember);text-shadow:0 0 30px var(--ember)}
+#card h2{margin:10px 0 0;font:300 italic clamp(54px,10vw,140px)/.9 var(--serif);letter-spacing:-.03em}
+#card p{margin:40px auto 0;max-width:38ch;font:italic 300 clamp(19px,2.2vw,24px)/1.35 var(--serif);color:var(--ash)}
+#card .tag{color:var(--stamp)}
+.play{margin-top:34px;background:none;border:1px solid var(--bone);padding:16px 26px;cursor:pointer;font:15px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.play:hover,.play:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
+a.play{color:var(--bone);text-decoration:none;margin-top:14px}
+.play.ghost{border-color:transparent;color:var(--ash);margin-top:12px;text-decoration:none}
+.acts{display:flex;flex-direction:column;align-items:center}
+
+/* ending credits roll */
+.credits{height:42vh;overflow:hidden;margin-top:22px;-webkit-mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent)}
+.credits div{animation:roll 26s linear both;padding-top:42vh}
+.credits dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font:15px/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.credits dt{text-align:right;color:var(--ash)}.credits dd{margin:0;text-align:left}
+.credits .h{grid-column:1/-1;text-align:center;color:var(--stamp);margin-top:18px}
+@keyframes roll{to{transform:translateY(-100%)}}
+.wit{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.wit .n{font:italic 300 clamp(20px,2.6vw,28px)/1.1 var(--serif)}
+.wit .n b{font-weight:500;color:var(--ember)}
+.wit button{font:12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:transparent;border:1px solid var(--ember);padding:12px 16px;cursor:pointer}
+.wit button b{color:var(--ember);font-weight:400}
+.wit button[disabled]{opacity:.6}
+
+#black{position:absolute;inset:0;z-index:8;background:#000;opacity:0;pointer-events:none;transition:opacity .35s ease}
+#black.on{opacity:1}
+#burn{position:absolute;inset:0;z-index:8;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 70% 40%,rgba(255,240,200,.95),rgba(255,120,20,.7) 30%,rgba(120,20,0,.4) 60%,transparent 80%);mix-blend-mode:screen}
+#burn.go{animation:burn .6s ease-out}
+#flash{position:absolute;inset:0;z-index:8;pointer-events:none;background:#fff;opacity:0}
+#flash.go{animation:flash .8s ease-out}
+@keyframes flash{0%{opacity:1}10%{opacity:.95}100%{opacity:0}}
+@keyframes burn{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+#grain{position:fixed;inset:-10%;width:120%;height:120%;z-index:20;pointer-events:none;opacity:.1;mix-blend-mode:screen}
+#scare{position:fixed;inset:0;z-index:30;pointer-events:none;background:#000 url("../img/p10.jpg") center 30%/cover no-repeat;filter:grayscale(1) contrast(1.8) brightness(1.25)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+@media (max-width:720px){
+  :root{--bar:clamp(24px,7vh,60px)}
+  #fork .opts{grid-template-columns:1fr}
+  #shot img{--x0:30%;--x1:70%}
+  .credits dl{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition:none!important}}
+#prog{position:absolute;z-index:6;left:0;right:0;bottom:var(--bar);height:2px;background:rgba(255,255,255,.08)}
+#prog i{display:block;height:100%;width:100%;background:var(--stamp);transform-origin:left;transform:scaleX(0)}
+#pp{background:none;border:0;padding:6px 0;cursor:pointer}
+body.paused #shot img.fg,body.paused #shot{animation-play-state:paused}
+body.paused #subs span{opacity:.35}
+.credits.long{height:58vh}.credits.long div{padding-top:58vh;animation-duration:30s}
+/* clapperboard before each take */
+#slate{position:absolute;z-index:6;left:50%;top:50%;width:min(340px,74vw);transform:translate(-50%,-50%) rotate(-3deg);background:#0b0b0b;border:2px solid var(--bone);opacity:0;pointer-events:none;box-shadow:0 10px 40px #000}
+#slate.go{animation:slate 1.5s ease-out both}
+#slate .arm{height:30px;background:repeating-linear-gradient(-45deg,var(--bone) 0 18px,#0b0b0b 18px 36px);border-bottom:2px solid var(--bone);transform-origin:0 100%}
+#slate.go .arm{animation:clap .35s cubic-bezier(.6,0,.9,.4) both}
+#slate .row{display:flex;justify-content:space-between;padding:12px 16px 0;font:12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ash)}
+#slate .big{padding:8px 16px 16px;font:400 clamp(30px,8vw,46px)/1 var(--mono);color:var(--bone);letter-spacing:.04em}
+#slate.final .big{color:var(--stamp)}
+@keyframes slate{0%{opacity:0}8%{opacity:1}75%{opacity:1}100%{opacity:0}}
+@keyframes clap{from{transform:rotate(-24deg)}to{transform:rotate(0)}}
+#slate.hold{animation:none;opacity:1}
+/* who is speaking */
+#subs span.dir{color:#cfc6b8;font-style:italic}
+#subs span.dir::before{content:"реж.  ";font:11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ash);font-style:normal;vertical-align:3px}
+</style>
+</head>
+<body>
+
+<div id="screen" aria-live="polite">
+  <div id="shot"></div>
+  <div class="vig" aria-hidden="true"></div>
+  <div class="scratch" aria-hidden="true"></div><div class="scratch b" aria-hidden="true"></div>
+  <div class="lb t"></div><div class="lb b"></div>
+  <div class="hud t mono"><span id="scn"><span class="rec"></span>кастинг</span><span>пробы на роль д.</span></div>
+  <div class="hud b mono"><button id="pp" class="mono" type="button">❚❚ пауза</button><span id="tc">00:00:00:00</span></div>
+  <div id="subs"><span></span></div>
+  <div id="prog"><i></i></div>
+  <div id="black"></div>
+  <div id="burn"></div>
+  <div id="slate" aria-hidden="true"><div class="arm"></div><div class="row"><span>«д.»</span><span id="slR">роль: д.</span></div><div class="big" id="slN">проба 1</div></div>
+  <div id="flash"></div>
+  <div id="card"></div>
+</div>
+<canvas id="grain" width="320" height="320" aria-hidden="true"></canvas>
+<audio id="vo" src="vo.mp3" preload="auto"></audio>
+
+<script>
+/* ---------- film ---------- */
+// one segment per frame; at: when it starts in vo.mp3 (seconds), measured from the pauses in the voice
+var SEG=[
+  {img:"p22",slate:"проба 1",t:["~Представьтесь.","Д.","~Ещё раз.","Д.","~Не верю."]},
+  {img:"p13",slate:"проба 4",t:["~Проба четыре. Вы голодны. Сыграйте голод.","Я не голоден.","~Вот поэтому. Следующий."]},
+  {img:"p14",slate:"проба 9",t:["~Проба девять. Вас несут. Вам страшно?","Нет.","~А должно быть."]},
+  {img:"p11",slate:"проба 12",t:["~Проба двенадцать. Вода тёплая. Не спрашивайте почему."]},
+  {img:"p12",slate:"проба 20",t:["Кто все эти люди?","~Тоже пробуются. На вас."]},
+  {img:"p5",slate:"проба 27",t:["~Шесть дублей. Ни один не похож.","Это моя семья.","~Это массовка."]},
+  {img:"p16",dark:1,slate:"проба 36",t:["~Проба тридцать шесть."]},
+  {img:"p16",t:["~Вот. Вот этот подходит."]},
+  {img:"p23",t:["А я?","~А вы в поле. К остальным."]},
+  {img:"p24",t:["Их было тридцать пять. Я был тридцать шестым."]},
+  {img:null,slate:"снято",t:["~Снято."]},
+  {img:null,slate:"next",fin:1,t:["~Следующий."]}
+];
+var LINES=[[1.5, 3.02, 4.29, 5.74, 7.17], [9.92, 14.03, 15.81], [19.27, 23.01, 24.27], [26.77], [31.78, 33.71], [37.0, 40.01, 41.87], [44.29], [46.59], [49.9, 51.16], [54.44], [59.24], [61.69]]; // when each line starts in vo.mp3
+var CUES=[0.6, 8.62, 17.97, 25.47, 30.48, 35.7, 42.99, 45.59, 48.5, 53.04, 57.64, 59.89]; // segment starts, a clap 0.25 s after each slate
+
+var $=function(id){return document.getElementById(id)};
+var vo=$("vo"),shot=$("shot"),subs=$("subs").firstChild,card=$("card"),black=$("black"),burnEl=$("burn"),bar=$("prog").firstChild;
+var cur=-1,curLine=-1,raf=0,ended=false,flashEl=$("flash");
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+// fallback when no cues: spread segments over the track by text length
+function cues(){
+  if(CUES)return CUES;
+  var d=vo.duration||120,len=SEG.map(function(s){return s.t.join(" ").length+40}),tot=len.reduce(function(a,b){return a+b},0),acc=0;
+  return len.map(function(l){var a=acc/tot*d;acc+=l;return a});
+}
+function frame(img,dark){
+  black.classList.add("on");
+  setTimeout(function(){
+    shot.innerHTML="";shot.classList.toggle("dark",!!dark);black.classList.remove("on");if(!img)return;
+    var bg=new Image(),el=new Image();bg.src=el.src="../img/"+img+".jpg";bg.alt=el.alt="";bg.className="bg";el.className="fg";
+    var up=Math.random()<.5;
+    el.style.setProperty("--y0",up?"85%":"15%");el.style.setProperty("--y1",up?"15%":"85%");el.style.setProperty("--o",up?"25%":"70%");el.style.setProperty("--dur","14s");
+    shot.appendChild(bg);shot.appendChild(el);
+    requestAnimationFrame(function(){requestAnimationFrame(function(){bg.classList.add("on");el.classList.add("on")})});
+  },300);
+}
+function line(txt){
+  subs.className="";var dir=txt&&txt.charAt(0)==="~";if(dir)txt=txt.slice(1);
+  setTimeout(function(){subs.textContent=txt;subs.className=txt?(dir?"on dir":"on"):""},180);
+}
+function tick(){
+  var t=vo.currentTime,c=cues(),i=0;
+  while(i+1<c.length&&t>=c[i+1])i++;
+  if(i!==cur){
+    var prev=SEG[cur];cur=i;curLine=-1;
+    // the dark signpost followed by the same frame: the flash fires instead of a cut
+    if(prev&&prev.img===SEG[i].img&&prev.dark&&!SEG[i].dark){shot.classList.remove("dark");flashEl.classList.remove("go");void flashEl.offsetWidth;flashEl.classList.add("go")}
+    else frame(SEG[i].img,SEG[i].dark);$("scn").innerHTML='<span class="rec"></span>кадр '+("0"+(i+1)).slice(-2)+' / '+SEG.length;
+    if(SEG[i].slate)slate(SEG[i].slate,SEG[i].fin);if(SEG[i].burn){burnEl.classList.remove("go");void burnEl.offsetWidth;burnEl.classList.add("go")}}
+  // which sentence inside the segment, from the short pauses in the voice
+  var lines=SEG[i].t,at=LINES[i],j=0;
+  while(j+1<lines.length&&t>=at[j+1])j++;
+  if(j!==curLine){curLine=j;line(lines[j])}
+  bar.style.transform="scaleX("+(vo.duration?t/vo.duration:0)+")";
+  var sec=Math.floor(t),f=Math.floor(t*24)%24;
+  $("tc").textContent=["00",("0"+Math.floor(sec/60)).slice(-2),("0"+sec%60).slice(-2),("0"+f).slice(-2)].join(":");
+  if(!vo.paused)raf=requestAnimationFrame(tick);
+}
+var slEl=$("slate"),viewerN=37;
+function slate(txt,fin){slEl.className="";$("slN").textContent=fin?"проба "+viewerN:txt;$("slR").textContent=fin?"роль: вы":"роль: д.";void slEl.offsetWidth;slEl.className=fin?"go final hold":"go"}
+function finale(){
+  ended=true;cancelAnimationFrame(raf);line("");
+  card.innerHTML='<div><div class="mono tag">серия вторая · пробы</div><h2>Следующий</h2>'+
+    '<p>Вы пробуетесь на роль. Режиссёр уже смотрит. Сядьте ровно и не моргайте.</p>'+
+    '<div class="acts"><button class="play" type="button" data-go="again">ещё дубль</button><a class="play ghost" href="../film/">← серия первая</a><a class="play ghost" href="../">← на главную</a></div>'+
+    '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й зритель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div>';
+  setTimeout(function(){card.classList.add("on");witness()},1500);
+}
+function start(){
+  ended=false;slEl.className="";
+  api("GET","").then(function(d){viewerN=d.visit+(get("durka-visit")?0:1)}).catch(function(){});cur=-1;card.classList.remove("on");document.body.classList.remove("open","paused");
+  vo.currentTime=0;var pr=vo.play();if(pr&&pr.catch)pr.catch(function(){});
+  window.durkaHum&&window.durkaHum(true);
+  cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
+}
+function togglePause(){
+  if(ended||document.body.classList.contains("open"))return;
+  if(vo.paused){vo.play();document.body.classList.remove("paused");$("pp").textContent="❚❚ пауза";raf=requestAnimationFrame(tick)}
+  else{vo.pause();document.body.classList.add("paused");$("pp").textContent="▶ дальше"}
+}
+vo.addEventListener("ended",finale);
+$("pp").addEventListener("click",function(e){e.stopPropagation();togglePause()});
+$("screen").addEventListener("click",function(e){if(!e.target.closest("#card,button"))togglePause()});
+addEventListener("keydown",function(e){if(e.key===" "&&!e.target.closest("button")){e.preventDefault();togglePause()}});
+card.addEventListener("click",function(e){var b=e.target.closest("[data-go]");if(!b)return;e.stopPropagation();start()});
+document.addEventListener("visibilitychange",function(){if(document.hidden&&!vo.paused)togglePause()});
+
+function intro(){
+  document.body.classList.add("open");
+  card.innerHTML='<div><h1 aria-label="дурка">д<span class="k">у</span>рк<span class="a">а</span></h1>'+
+    '<p>Серия вторая. Пробы на роль Д. Смотреть со звуком и в темноте.</p>'+
+    '<div class="acts"><button class="play" type="button" data-go="start">▶ смотреть</button><a class="play ghost" href="../">← на главную</a></div></div>';
+  card.classList.add("on");
+}
+intro();
+
+/* ---------- viewer counter ---------- */
+function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+var offline={visit:666,seen:0};
+function api(method,k){return fetch("/api/witness"+(k?"?k="+k:""),{method:method,cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()})}
+function witness(){
+  var vN=$("visitN"),sN=$("seenN"),sb=$("seen");
+  function fill(d){vN.textContent=d.visit;sN.textContent=d.seen}
+  var firstVisit=!get("durka-visit");
+  api(firstVisit?"POST":"GET",firstVisit?"visit":"").then(function(d){put("durka-visit","1");fill(d)}).catch(function(){fill(offline)});
+  if(get("durka-seen"))sb.disabled=true;
+  sb.addEventListener("click",function(e){
+    e.stopPropagation();if(sb.disabled)return;sb.disabled=true;put("durka-seen","1");
+    api("POST","seen").then(fill).catch(function(){offline.seen++;fill(offline)});
+  });
+}
+
+/* ---------- browser tab calls you back ---------- */
+var title=document.title,tt;
+document.addEventListener("visibilitychange",function(){
+  clearInterval(tt);
+  if(document.hidden){var w=["вернись","он здесь","фильм не закончился","мы ждём"],i=0;document.title=w[0];tt=setInterval(function(){i=(i+1)%w.length;document.title=w[i]},1500)}
+  else document.title=title;
+});
+</script>
+<script>
+(function(){
+  // film grain
+  var c=document.getElementById("grain"),x=c.getContext("2d"),img=x.createImageData(320,320),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,last=0;
+  function grain(ts){
+    if(ts-last>60){last=ts;var d=img.data;for(var i=0;i<d.length;i+=4){var v=Math.random()*255|0;d[i]=v;d[i+1]=v*.92|0;d[i+2]=v*.8|0;d[i+3]=255}x.putImageData(img,0,0)}
+    if(!reduce)requestAnimationFrame(grain);
+  }
+  requestAnimationFrame(grain);
+
+  // under the voice: a low hum and the projector clattering, quiet
+  var ac=null;
+  function noise(sec){var b=ac.createBuffer(1,ac.sampleRate*sec|0,ac.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
+  function burst(t,dur,freq,vol){var s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=noise(dur);f.type="highpass";f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f).connect(g).connect(ac.destination);s.start(t)}
+  window.durkaHum=function(){
+    try{
+      if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();
+        var g=ac.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.035,ac.currentTime+3);g.connect(ac.destination);
+        [41,55.3,82.4].forEach(function(f,i){var o=ac.createOscillator();o.frequency.value=f;var og=ac.createGain();og.gain.value=[1,.7,.25][i];o.connect(og).connect(g);o.start()});
+        setInterval(function(){var b=document.body.classList;if(!b.contains("paused")&&!b.contains("open"))burst(ac.currentTime,.012,2600,.015+Math.random()*.015)},42);
+      }
+      ac.resume();
+    }catch(e){}
+  };
+  document.getElementById("vo").addEventListener("pause",function(){ac&&ac.suspend()});
+  document.getElementById("vo").addEventListener("play",function(){ac&&ac.resume()});
+})();
+</script>
+</body>
+</html>

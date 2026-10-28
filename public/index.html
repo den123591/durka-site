@@ -150,7 +150,7 @@ body.flashed #dark{opacity:0;transition:none}
 .wit button[disabled]{opacity:.6}
 /* way to the film section */
 a.film{color:var(--stamp);text-decoration:none;border-bottom:1px solid rgba(255,122,26,.5)}
-a.filmcta{display:inline-flex;flex-direction:column;align-items:center;gap:8px;margin-top:40px;padding:18px 26px;border:1px solid var(--bone);color:var(--bone);text-decoration:none;
+a.filmcta{display:inline-flex;margin-inline:6px;flex-direction:column;align-items:center;gap:8px;margin-top:40px;padding:18px 26px;border:1px solid var(--bone);color:var(--bone);text-decoration:none;
   font:15px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 a.filmcta span{font-size:11px;color:var(--ash)}
 a.film:hover,a.filmcta:hover,a.film:focus-visible,a.filmcta:focus-visible{color:var(--stamp);border-color:var(--stamp);outline:none}
@@ -168,7 +168,7 @@ a.film:hover,a.filmcta:hover,a.film:focus-visible,a.filmcta:focus-visible{color:
 <button id="snd" type="button" aria-pressed="false">звук: выкл</button>
 
 <header class="open g">
-  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><a class="film" href="film/">▶ есть ещё фильм</a><span>15 кадров · проявлено без разрешения</span></div>
+  <div class="corner mono"><span>Плёнка №3 · найдена в лесу</span><a class="film" href="film/">▶ есть фильм</a><span>15 кадров · проявлено без разрешения</span></div>
   <h1 aria-label="дурка"><span>д</span><span class="k">у</span><span>р</span><span>к</span><span class="a">а</span></h1>
   <figure class="jaw" aria-hidden="true"><img src="img/p8.jpg" alt=""><time class="st">'03 ?? ??</time></figure>
   <div class="bottom">
@@ -253,6 +253,7 @@ a.film:hover,a.filmcta:hover,a.film:focus-visible,a.filmcta:focus-visible{color:
     <p>Если вы узнали человека на снимках, не говорите ему.</p>
     <div class="mono">36 кадров · 15 проявлено · 21 сгорело</div>
     <a class="filmcta" href="film/">▶ смотреть фильм <span>петля в поле</span></a>
+    <a class="filmcta" href="proby/">▶ серия вторая <span>пробы</span></a>
     <div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й свидетель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div>
   </div>
 </footer>

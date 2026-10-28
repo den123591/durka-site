@@ -99,6 +99,7 @@ body.frozen #shot{animation-play-state:paused}
 #card .tag{color:var(--stamp)}
 .play{margin-top:34px;background:none;border:1px solid var(--bone);padding:16px 26px;cursor:pointer;font:15px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .play:hover,.play:focus-visible{border-color:var(--stamp);color:var(--stamp);outline:none}
+a.play{color:var(--bone);text-decoration:none;margin-top:14px}
 .play.ghost{border-color:transparent;color:var(--ash);margin-top:12px;text-decoration:none}
 .acts{display:flex;flex-direction:column;align-items:center}
 
@@ -231,7 +232,7 @@ function finale(){
   ended=true;cancelAnimationFrame(raf);line("");
   card.innerHTML='<div><div class="mono tag">конец плёнки</div><h2>Петля</h2>'+
     '<p>Указатель до сих пор стоит у трассы. Если проедете мимо ночью, не включайте вспышку.</p>'+
-    '<div class="acts"><button class="play" type="button" data-go="again">смотреть ещё раз</button><a class="play ghost" href="../">← на главную</a></div>'+
+    '<div class="acts"><button class="play" type="button" data-go="again">смотреть ещё раз</button><a class="play" href="../proby/">▶ серия вторая: пробы</a><a class="play ghost" href="../">← на главную</a></div>'+
     '<div class="wit"><div class="n">Вы — <b id="visitN">…</b>-й зритель</div><button id="seen" type="button">Я видел этого человека · <b id="seenN">…</b></button></div></div>';
   setTimeout(function(){card.classList.add("on");witness()},1500);
 }
